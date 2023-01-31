@@ -31,8 +31,8 @@ class Parser(html.parser.HTMLParser, abc.ABC):
         for fn in os.listdir(output_folder):
             os.remove(output_folder + '/' + fn)
 
-        f = open(file_path, 'rt')
-        self.feed('\n'.join(f.readlines()))
+        with open(file_path, 'rt') as f:
+            self.feed('\n'.join(f.readlines()))
 
         os.rmdir(output_folder)
         os.mkdir(output_folder)

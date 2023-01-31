@@ -12,6 +12,11 @@ class TestQuestionChooser(unittest.TestCase):
     CORRECT_COL_IDX = 2
     WRONG_COL_IDX = 3
 
+    def setUp(self):
+        question_chooser.QuestionChooser.DB_FN = self.TEST_DB_FN
+        question_chooser.QuestionChooser.TABLE = self.TEST_TABLE
+        self.qc = question_chooser.QuestionChooser()
+
     def t_init(self, qc):
         self.assertEqual(os.path.isfile(self.TEST_DB_FN), True)
         data = qc.conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", [self.TEST_TABLE])
@@ -46,11 +51,6 @@ class TestQuestionChooser(unittest.TestCase):
         self.assertTrue(500 - error < q_count["q2.html"] < 500 + error)
         self.assertTrue(300 - error < q_count["q3.html"] < 300 + error)
 
-    def setUp(self):
-        question_chooser.QuestionChooser.DB_FN = self.TEST_DB_FN
-        question_chooser.QuestionChooser.TABLE = self.TEST_TABLE
-        self.qc = question_chooser.QuestionChooser()
-
     def test_working(self):
         self.t_init(self.qc)
         self.t_store_answer(self.qc)
@@ -75,7 +75,8 @@ class TestParser(unittest.TestCase):
 
     def test_simple_feed(self):
         p = interviews_parser.Parser()
-        feed = '\n'.join(open(self.EXAMPLE_HTML, 'rt').readlines())
+        with open(self.EXAMPLE_HTML, 'rt') as htmlfile:
+            feed = '\n'.join(htmlfile.readlines())
         p.feed(feed)
 
         self.assertEqual('c73', p.question_style)
@@ -121,7 +122,3 @@ class TestParser(unittest.TestCase):
         self.assertEqual('big_o', interviews_parser.Parser.remove_tags(
             '<p class="c27"><span class="c1">big_o</span></p>'
         ))
-
-
-if __name__ == '__main__':
-    unittest.main()
