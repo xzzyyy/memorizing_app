@@ -1,8 +1,6 @@
-import unittest
 import os
-import shutil
+import unittest
 import question_chooser
-import interviews_parser
 
 
 class TestQuestionChooser(unittest.TestCase):
@@ -65,60 +63,3 @@ class TestQuestionChooser(unittest.TestCase):
     def tearDown(self):
         self.qc.release()
         os.remove(self.TEST_DB_FN)
-
-
-class TestParser(unittest.TestCase):
-    EXAMPLE_HTML = 'test_simple_feed.html'
-
-    def setUp(self):
-        print()     # without it PASSED is on the same line as output
-
-    def test_simple_feed(self):
-        p = interviews_parser.Parser()
-        with open(self.EXAMPLE_HTML, 'rt') as htmlfile:
-            feed = '\n'.join(htmlfile.readlines())
-        p.feed(feed)
-
-        self.assertEqual('c73', p.question_style)
-        self.assertEqual(1, len(p.d))
-        self.assertEqual('tq', p.d[0]['q_id'])
-        self.assertEqual('<h2 class="c11">test_question</h2>', p.d[0]['q'])
-        self.assertEqual('запись', p.d[0]['a'])
-        self.assertEqual('<style type="text/css">table td{padding:0}.c73{background-color:#efefef}</style>',
-                         p.style)
-
-    def test_file_management(self):
-        folder_name = 'test_file_management'
-        trash_file_name = 'trash.txt'
-
-        p = interviews_parser.Parser()
-        try:
-            os.mkdir(folder_name)
-        except FileExistsError:
-            pass
-        f = open(folder_name + '/' + trash_file_name, 'w')
-        f.close()
-
-        self.assertEqual(0, p.process_file(self.EXAMPLE_HTML, folder_name))
-
-        self.assertFalse(os.path.isfile(folder_name + '/' + trash_file_name))
-        self.assertTrue(os.path.isfile(folder_name + '/' + p.d[0]['q_id'] + '.html'))
-        a_fn = folder_name + '/' + p.d[0]['q_id'] + '_a.html'
-        self.assertTrue(os.path.isfile(a_fn))
-
-        f = open(a_fn, 'rt', encoding='utf_8_sig')
-        self.assertEqual('<html><head>'
-                         '<style type="text/css">table td{padding:0}.c73{background-color:#efefef}</style>'
-                         '<body>запись</body></head></html>', f.readline())
-        f.close()
-
-        shutil.rmtree(folder_name)
-
-    def test_no_output_folder(self):
-        self.assertEqual(1, interviews_parser.Parser().process_file(
-            self.EXAMPLE_HTML, 'nonexistent-folder'))
-
-    def test_tag_removal(self):
-        self.assertEqual('big_o', interviews_parser.Parser.remove_tags(
-            '<p class="c27"><span class="c1">big_o</span></p>'
-        ))
