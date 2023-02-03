@@ -91,7 +91,7 @@ def update_db(htm_dir, sqlite):
         row = cursor.fetchone()
 
     for htm_fn in os.listdir(htm_dir):
-        qa_id = os.path.splitext(os.path.basename(htm_fn))[0]
+        qa_id = os.path.splitext(htm_fn)[0]
         file_ids.add(qa_id)
 
         cursor = sqlite.execute("SELECT * FROM qa WHERE id = ?", [qa_id])

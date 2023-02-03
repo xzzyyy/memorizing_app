@@ -1,65 +1,72 @@
 import os
 import unittest
-import question_chooser
+import sqlite3
+from question_chooser import QuestionChooser
 
 
 class TestQuestionChooser(unittest.TestCase):
-    TEST_DB_FN = "interviews_test.sqlite"
-    TEST_TABLE = "questions_test"
-
-    CORRECT_COL_IDX = 2
-    WRONG_COL_IDX = 3
+    DB_PATH = "interviews_server_test.sqlite"
+    ID1 = "qa1"
+    ID2 = "qa2"
+    ID3 = "qa3"
 
     def setUp(self):
-        question_chooser.QuestionChooser.DB_FN = self.TEST_DB_FN
-        question_chooser.QuestionChooser.TABLE = self.TEST_TABLE
-        self.qc = question_chooser.QuestionChooser()
+        self.qc = QuestionChooser(TestQuestionChooser.DB_PATH)
+        self.conn = sqlite3.connect(TestQuestionChooser.DB_PATH)
 
-    def t_init(self, qc):
-        self.assertEqual(os.path.isfile(self.TEST_DB_FN), True)
-        data = qc.conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", [self.TEST_TABLE])
-        self.assertEqual(data.fetchone()[0], self.TEST_TABLE)
+        tbl_desc = self.qc.get_table_desc()
+        self.tb_name = tbl_desc['name']
+        self.correct_idx = tbl_desc['correct_idx']
+        self.wrong_idx = tbl_desc['wrong_idx']
+        self.id_col = tbl_desc['id_col']
 
-    def t_store_answer(self, qc):
-        qc.conn.execute("INSERT INTO %s values('q1.html', 'qa1.html', 3, 2)" % self.TEST_TABLE)
-        qc.conn.execute("INSERT INTO %s values('q2.html', 'qa2.html', 1, 2)" % self.TEST_TABLE)
-        qc.conn.execute("INSERT INTO %s values('q3.html', 'qa3.html', 2, 2)" % self.TEST_TABLE)
-        qc.conn.commit()
+    def t_init(self):
+        data = self.conn.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", [self.tb_name])
+        self.assertEqual(data.fetchone()[0], self.tb_name)
 
-        self.assertFalse(qc.store_answer("q1.html", True))
-        self.assertFalse(qc.store_answer("q2.html", False))
+    def t_store_answer(self):
+        self.conn.execute("INSERT INTO %s values(?, 'test1', 3, 2)" % self.tb_name, [TestQuestionChooser.ID1])
+        self.conn.execute("INSERT INTO %s values(?, 'test2', 1, 2)" % self.tb_name, [TestQuestionChooser.ID2])
+        self.conn.execute("INSERT INTO %s values(?, 'test3', 2, 2)" % self.tb_name, [TestQuestionChooser.ID3])
+        self.conn.commit()
 
-        data = qc.conn.execute("SELECT * FROM %s WHERE question = 'q1.html'" % self.TEST_TABLE)
-        self.assertEqual(data.fetchone()[self.CORRECT_COL_IDX], 4)
-        data = qc.conn.execute("SELECT * FROM %s WHERE question = 'q2.html'" % self.TEST_TABLE)
-        self.assertEqual(data.fetchone()[self.WRONG_COL_IDX], 3)
+        self.assertFalse(self.qc.store_answer(TestQuestionChooser.ID1, True))
+        self.assertFalse(self.qc.store_answer(TestQuestionChooser.ID2, False))
 
-    def t_get_question(self, qc):
+        data = self.conn.execute("SELECT * FROM %s WHERE %s = ?" % (self.tb_name, self.id_col),
+                                 [TestQuestionChooser.ID1])
+        self.assertEqual(data.fetchone()[self.correct_idx], 4)
+        data = self.conn.execute("SELECT * FROM %s WHERE %s = ?" % (self.tb_name, self.id_col),
+                                 [TestQuestionChooser.ID2])
+        self.assertEqual(data.fetchone()[self.wrong_idx], 3)
+
+    def t_get_question(self):
         count = 900
         error = 50
 
-        q_count = {"q1.html": 0, "q2.html": 0, "q3.html": 0}
+        q_count = {TestQuestionChooser.ID1: 0, TestQuestionChooser.ID2: 0, TestQuestionChooser.ID3: 0}
         for i in range(count):
-            q_count[qc.get_question()] += 1
+            q_count[self.qc.get_question()] += 1
 
         # q1    4   2   -2  1
         # q2    1   3   2   5
         # q3    2   2   0   3
-        self.assertTrue(100 - error < q_count["q1.html"] < 100 + error)
-        self.assertTrue(500 - error < q_count["q2.html"] < 500 + error)
-        self.assertTrue(300 - error < q_count["q3.html"] < 300 + error)
+        self.assertTrue(100 - error < q_count[TestQuestionChooser.ID1] < 100 + error)
+        self.assertTrue(500 - error < q_count[TestQuestionChooser.ID2] < 500 + error)
+        self.assertTrue(300 - error < q_count[TestQuestionChooser.ID3] < 300 + error)
 
     def test_working(self):
-        self.t_init(self.qc)
-        self.t_store_answer(self.qc)
-        self.t_get_question(self.qc)
+        self.t_init()
+        self.t_store_answer()
+        self.t_get_question()
 
     def test_no_questions(self):
         self.assertEqual("no questions added", self.qc.get_question())
 
     def test_store_gives_error(self):
-        self.assertTrue(self.qc.store_answer('test', True))
+        self.assertTrue(self.qc.store_answer("test", True))
 
     def tearDown(self):
+        self.conn.close()
         self.qc.release()
-        os.remove(self.TEST_DB_FN)
+        os.remove(TestQuestionChooser.DB_PATH)
