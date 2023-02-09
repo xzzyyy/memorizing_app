@@ -36,7 +36,7 @@ class MemorizingAppWindow(QMainWindow):
 
         htmls = os.listdir("example")
         html_fn = random.choice(htmls)
-        with open("example/" + html_fn, "r") as html_file:
+        with open("example/" + html_fn, "r", encoding="utf8") as html_file:
             html_str = html_file.read()
         self.browser.setHtml(html_str)
 
