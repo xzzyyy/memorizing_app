@@ -1,10 +1,23 @@
 import os
 import re
+import shutil
 import subprocess
 import sqlite3
+from question_chooser import QuestionChooser
 
 OUTSIDE = 0
 INSIDE = 1
+PRJ_NAME = "MemorizingApp"
+
+
+def get_tmp_dirs():
+    tmp_dir = os.environ["TMP"]
+    return "%s\\%s\\md_files" % (tmp_dir, PRJ_NAME), "%s\\%s\\htm_files" % (tmp_dir, PRJ_NAME)
+
+
+def get_tmp_app_dir():
+    tmp_dir = os.environ["TMP"]
+    return "%s\\%s" % (tmp_dir, PRJ_NAME)
 
 
 def parse(lines_list):
@@ -40,9 +53,7 @@ def parse_md(md_path):
 
 def write_mds(qa_strs):
     try:
-        tmp_dir = os.environ["TMP"]
-        md_dir = "%s\\interviews_server\\md_files" % tmp_dir
-        htm_dir = "%s\\interviews_server\\htm_files" % tmp_dir
+        md_dir, htm_dir = get_tmp_dirs()
 
         os.makedirs(md_dir)
         os.makedirs(htm_dir)
@@ -69,22 +80,23 @@ def convert_to_htm(md_dir, htm_dir):
 def create_db(db_path):
     sqlite = sqlite3.connect(db_path)
     sqlite.execute("""
-CREATE TABLE qa (
-id TEXT NOT NULL PRIMARY KEY,
-qa BLOB NOT NULL,
-correct INTEGER NOT NULL,
-wrong INTEGER NOT NULL
-)
-                    """)
+        CREATE TABLE qa (
+        id TEXT NOT NULL PRIMARY KEY,
+        qa BLOB NOT NULL,
+        correct INTEGER NOT NULL,
+        wrong INTEGER NOT NULL
+        )
+    """)
     sqlite.commit()
     return sqlite
 
 
 def update_db(htm_dir, sqlite):
+    t_desc = QuestionChooser.get_table_desc()
     existing_ids = set()
     file_ids = set()
 
-    cursor = sqlite.execute("SELECT id FROM qa")
+    cursor = sqlite.execute("SELECT %s FROM %s" % (t_desc["id_col"], t_desc["name"]))
     row = cursor.fetchone()
     while row:
         existing_ids.add(row[0])
@@ -94,19 +106,38 @@ def update_db(htm_dir, sqlite):
         qa_id = os.path.splitext(htm_fn)[0]
         file_ids.add(qa_id)
 
-        cursor = sqlite.execute("SELECT * FROM qa WHERE id = ?", [qa_id])
+        cursor = sqlite.execute("SELECT * FROM %s WHERE %s = ?" % (t_desc["name"], t_desc["id_col"]), [qa_id])
         present = True
         if not cursor.fetchone():
             present = False
 
         with open("%s\\%s" % (htm_dir, htm_fn), 'rb') as htm:
             if not present:
-                sqlite.execute("INSERT INTO qa VALUES (?, ?, 0, 0)", (qa_id, memoryview(htm.read())))
+                sqlite.execute("INSERT INTO %s VALUES (?, ?, 0, 0)" % t_desc["name"], (qa_id, memoryview(htm.read())))
             else:
-                sqlite.execute("UPDATE qa SET qa = ? WHERE id = ?", (memoryview(htm.read()), qa_id))
+                sqlite.execute("UPDATE %s SET %s = ? WHERE %s = ?" %
+                               (t_desc["name"], t_desc["qa_col"], t_desc["id_col"]), (memoryview(htm.read()), qa_id))
     sqlite.commit()
 
     to_remove = existing_ids.difference(file_ids)
     for qa_id in to_remove:
-        sqlite.execute("DELETE FROM qa WHERE id = ?", [qa_id])
+        sqlite.execute("DELETE FROM %s WHERE %s = ?" % (t_desc["name"], t_desc["id_col"]), [qa_id])
     sqlite.commit()
+
+
+def remove_tmps():
+    shutil.rmtree(get_tmp_app_dir())
+
+
+def update_qa_db(md_path, db_path):
+
+    md_dir, htm_dir = get_tmp_dirs()
+    sqlite = sqlite3.connect(db_path)
+
+    qa_strs = parse_md(md_path)
+    write_mds(qa_strs)
+    convert_to_htm(md_dir, htm_dir)
+    update_db(htm_dir, sqlite)
+
+    sqlite.close()
+    remove_tmps()
