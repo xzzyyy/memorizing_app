@@ -1,5 +1,4 @@
 import os
-import random
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QMainWindow, QWidget
 from PyQt6.QtWidgets import QPushButton
@@ -33,7 +32,9 @@ class MemorizingAppWindow(QMainWindow):
         self.setCentralWidget(cw)
         self.setWindowTitle("Memorizing App")
         self.setMinimumSize(640, 480)
-        self.setWindowIcon(QIcon("qt/strawberry.ico"))
+
+        script_path = os.path.dirname(os.path.realpath(__file__))
+        self.setWindowIcon(QIcon("%s/qt/strawberry.ico" % script_path))
 
         v_lay = QVBoxLayout()
         cw.setLayout(v_lay)
@@ -43,8 +44,8 @@ class MemorizingAppWindow(QMainWindow):
         h_lay = QHBoxLayout()
         v_lay.addLayout(h_lay)
 
-        self.bt_correct = QPushButton(QIcon("qt/strawberry.ico"), "CORRECT")
-        self.bt_wrong = QPushButton(QIcon("qt/electrum.ico"), "WRONG")
+        self.bt_correct = QPushButton(QIcon("%s/qt/strawberry.ico" % script_path), "CORRECT")
+        self.bt_wrong = QPushButton(QIcon("%s/qt/electrum.ico" % script_path), "WRONG")
         self.bt_parse_md = QPushButton("...")
         self.bt_correct.setIconSize(QSize(32, 32))
         self.bt_wrong.setIconSize(QSize(32, 32))
@@ -54,12 +55,6 @@ class MemorizingAppWindow(QMainWindow):
         h_lay.addWidget(self.bt_correct)
         h_lay.addWidget(self.bt_wrong)
         h_lay.addWidget(self.bt_parse_md)
-
-        htmls = os.listdir("example")
-        html_fn = random.choice(htmls)
-        with open("example/" + html_fn, "r", encoding="utf8") as html_file:
-            html_str = html_file.read()
-        self.browser.setHtml(html_str)
 
         self.bt_correct.clicked.connect(self.correct_clicked)
         self.bt_wrong.clicked.connect(self.wrong_clicked)
@@ -100,7 +95,7 @@ class MemorizingAppWindow(QMainWindow):
         self.next_qa()
 
     def parse_md_clicked(self):
-        path_with_filter = QFileDialog.getOpenFileName(self, "select .md file to parse", filter="*.md")
+        path_with_filter = QFileDialog.getOpenFileName(self, "select `.md` file to parse", filter="*.md")
         if not path_with_filter[0]:
             return
 

@@ -71,9 +71,10 @@ def write_mds(qa_strs):
 
 
 def convert_to_htm(md_dir, htm_dir):
+    script_path = os.path.dirname(os.path.realpath(__file__))
     for md_fn in os.listdir(md_dir):
         qa_id = os.path.splitext(md_fn)[0]
-        subprocess.run(["pandoc", "-s", "-H", "style.css", "%s\\%s" % (md_dir, md_fn),
+        subprocess.run(["pandoc", "-s", "-H", "%s\\style.css" % script_path, "%s\\%s" % (md_dir, md_fn),
                         "-o", "%s\\%s" % (htm_dir, "%s.htm" % qa_id)])
 
 
