@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>iterator_for_algo</title>
+  <title>o_func</title>
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
@@ -26,17 +26,19 @@
 </head>
 <body>
 <blockquote>
-<p>what can be used as iterator for STL algorithms?</p>
+<p>meaning of <em>O(func)</em></p>
 </blockquote>
 <ul>
-<li>instance of class</li>
-<li>raw pointer if elements are contiguous in memory
-(<code>array</code>, <code>vector</code>, <code>deque</code>)</li>
+<li>asymptotic behavior of the function when argument goes to
+infinity</li>
+<li>describes how execution time or used memory grow with input data
+growing
+<ul>
+<li>important only how fast function grows, not specific function</li>
+<li><em>n</em> and <em>2n</em> operations algorithms have same
+complexity <em>O(n)</em>, so <em>O(n/2)</em> doesn’t make sense</li>
+</ul></li>
 </ul>
-<p><em>ref</em>: <a
-href="https://stackoverflow.com/questions/16445957/can-raw-pointers-be-used-instead-of-iterators-with-stl-algorithms-for-containers">Can
-raw pointers be used instead of iterators with STL algorithms for
-containers with linear storage?</a><br />
-<em>id</em>: <code>iterator_for_algo</code></p>
+<p><em>id</em>: <code>o_func</code></p>
 </body>
 </html>

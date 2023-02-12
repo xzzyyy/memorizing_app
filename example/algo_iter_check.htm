@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>iterator_for_algo</title>
+  <title>algo_iter_check</title>
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
@@ -26,17 +26,15 @@
 </head>
 <body>
 <blockquote>
-<p>what can be used as iterator for STL algorithms?</p>
+<p>how do algorithm functions check if what they got can be used as
+iterator?</p>
 </blockquote>
 <ul>
-<li>instance of class</li>
-<li>raw pointer if elements are contiguous in memory
-(<code>array</code>, <code>vector</code>, <code>deque</code>)</li>
+<li>there is no special check</li>
+<li>iterator should be fit to pass through template instantiation</li>
+<li>raw pointers can be used as iterators for contiguous layout
+containers</li>
 </ul>
-<p><em>ref</em>: <a
-href="https://stackoverflow.com/questions/16445957/can-raw-pointers-be-used-instead-of-iterators-with-stl-algorithms-for-containers">Can
-raw pointers be used instead of iterators with STL algorithms for
-containers with linear storage?</a><br />
-<em>id</em>: <code>iterator_for_algo</code></p>
+<p><em>id</em>: <code>algo_iter_check</code></p>
 </body>
 </html>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>iterator_for_algo</title>
+  <title>opt_add_vs_mult</title>
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
@@ -26,17 +26,17 @@
 </head>
 <body>
 <blockquote>
-<p>what can be used as iterator for STL algorithms?</p>
+<p>integer addition faster than multiplication?</p>
 </blockquote>
 <ul>
-<li>instance of class</li>
-<li>raw pointer if elements are contiguous in memory
-(<code>array</code>, <code>vector</code>, <code>deque</code>)</li>
+<li>depends on a lot of factors</li>
+<li>usually yes, but improvement is not worth to consider</li>
 </ul>
-<p><em>ref</em>: <a
-href="https://stackoverflow.com/questions/16445957/can-raw-pointers-be-used-instead-of-iterators-with-stl-algorithms-for-containers">Can
-raw pointers be used instead of iterators with STL algorithms for
-containers with linear storage?</a><br />
-<em>id</em>: <code>iterator_for_algo</code></p>
+<p><em>interviews: 210201 2gis</em><br />
+<em>ref: <a
+href="https://stackoverflow.com/questions/21819682/is-integer-multiplication-really-done-at-the-same-speed-as-addition-on-a-modern">Is
+integer multiplication really done at the same speed as addition on a
+modern CPU?</a></em><br />
+<em>id</em>: <code>opt_add_vs_mult</code></p>
 </body>
 </html>

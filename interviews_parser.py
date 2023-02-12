@@ -73,7 +73,7 @@ def write_mds(qa_strs):
 def convert_to_htm(md_dir, htm_dir):
     for md_fn in os.listdir(md_dir):
         qa_id = os.path.splitext(md_fn)[0]
-        subprocess.run(["pandoc", "-s", "--metadata", "title=%s" % qa_id, "%s\\%s" % (md_dir, md_fn),
+        subprocess.run(["pandoc", "-s", "-H", "style.css", "%s\\%s" % (md_dir, md_fn),
                         "-o", "%s\\%s" % (htm_dir, "%s.htm" % qa_id)])
 
 
@@ -89,6 +89,26 @@ def create_db(db_path):
     """)
     sqlite.commit()
     return sqlite
+
+
+def lookup_and_insert(s, lookup, ins, pos, after):
+    pos = s.find(lookup, pos)
+    if after:
+        pos += len(lookup)
+
+    s = s[:pos] + ins + s[pos:]
+
+    pos += len(ins)
+    if not after:
+        pos += len(lookup)
+
+    return s, pos
+
+
+def hide_answer(htm_str):
+    htm_str, pos = lookup_and_insert(htm_str, "</head>\n<body>\n", "<details>\n<summary>\n", 0, True)
+    htm_str, pos = lookup_and_insert(htm_str, "</blockquote>\n", "</summary>\n", pos, True)
+    return lookup_and_insert(htm_str, "</body>\n", "</details>\n", pos, False)[0]
 
 
 def update_db(htm_dir, sqlite):
@@ -111,12 +131,13 @@ def update_db(htm_dir, sqlite):
         if not cursor.fetchone():
             present = False
 
-        with open("%s\\%s" % (htm_dir, htm_fn), 'rb') as htm:
+        with open("%s\\%s" % (htm_dir, htm_fn), 'r', encoding="utf8") as htm:
+            htm_bytes = hide_answer(htm.read()).encode()
             if not present:
-                sqlite.execute("INSERT INTO %s VALUES (?, ?, 0, 0)" % t_desc["name"], (qa_id, memoryview(htm.read())))
+                sqlite.execute("INSERT INTO %s VALUES (?, ?, 0, 0)" % t_desc["name"], (qa_id, memoryview(htm_bytes)))
             else:
                 sqlite.execute("UPDATE %s SET %s = ? WHERE %s = ?" %
-                               (t_desc["name"], t_desc["qa_col"], t_desc["id_col"]), (memoryview(htm.read()), qa_id))
+                               (t_desc["name"], t_desc["qa_col"], t_desc["id_col"]), (memoryview(htm_bytes), qa_id))
     sqlite.commit()
 
     to_remove = existing_ids.difference(file_ids)

@@ -89,6 +89,25 @@ class TestQAParser(unittest.TestCase):
             os.remove(self.db_path)
         shutil.rmtree(interviews_parser.get_tmp_app_dir())
 
+    def test_lookup_and_insert(self):
+        self.assertEqual(("abc!def", 4), interviews_parser.lookup_and_insert("abcdef", "bc", "!", 0, True))
+        self.assertEqual(("abc!d##ef", 8), interviews_parser.lookup_and_insert("abc!def", "e", "##", 4, False))
+
+    def test_hide_answer(self):
+        src = "dif]-->\n</head>\n<body>\n<blockquote>\n<p>design " \
+              "patterns?</p>\n</blockquote>\n<ul>\n<li><p>thrns</code></p>\n</body>\n</ht"
+        dst = "dif]-->\n</head>\n<body>\n<details>\n<summary>\n<blockquote>\n<p>design " \
+              "patterns?</p>\n</blockquote>\n</summary>\n<ul>\n<li><p>thrns</code></p>\n</details>\n" \
+              "</body>\n</ht"
+        self.assertEqual(dst, interviews_parser.hide_answer(src))
+
+    def test_wrong_eol(self):
+        with open("test/src.htm", "r") as src_f:
+            src = src_f.read()
+        with open("test/processed.htm", "r") as processed_f:
+            prcsd = processed_f.read()
+        self.assertEqual(prcsd, interviews_parser.hide_answer(src))
+
 
 if __name__ == '__main__':
     unittest.main()
