@@ -2,9 +2,10 @@ import os
 import random
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QMainWindow, QWidget
-from PyQt6.QtWidgets import QTextBrowser, QPushButton
+from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout
 from PyQt6.QtWidgets import QFileDialog
+from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import QSize
 from question_chooser import QuestionChooser
@@ -36,7 +37,7 @@ class MemorizingAppWindow(QMainWindow):
 
         v_lay = QVBoxLayout()
         cw.setLayout(v_lay)
-        self.browser = QTextBrowser()
+        self.browser = QWebEngineView()
         v_lay.addWidget(self.browser)
 
         h_lay = QHBoxLayout()
