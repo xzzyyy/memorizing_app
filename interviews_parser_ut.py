@@ -10,9 +10,11 @@ class TestQAParser(unittest.TestCase):
     MD_PATH = "test\\test_qa_parser.md"
     QA_CNT = 10
     ALL_IDS_SQL = "test\\all_ids.sql"
-    CORRECT = 2
-    WRONG = 3
     CNT = 0
+
+    def setUp(self):
+        self.sqlite = None
+        self.set_temp_dirs()
 
     def test_parser_algo(self):
         qa_strs = interviews_parser.parse([
@@ -32,7 +34,6 @@ class TestQAParser(unittest.TestCase):
         self.htm_dir = "%s\\%s\\htm_files" % (tmp_dir, interviews_parser.PRJ_NAME)
         self.db_path = "%s\\%s\\test.sqlite" % (tmp_dir, interviews_parser.PRJ_NAME)
         self.prj_dir = "%s\\%s" % (tmp_dir, interviews_parser.PRJ_NAME)
-        self.sqlite = None
 
     def test_update_db(self):
         self.set_temp_dirs()
@@ -50,44 +51,44 @@ class TestQAParser(unittest.TestCase):
 
         self.sqlite = sqlite3.connect(self.db_path)
         QuestionChooser.create_table(self.sqlite)
-        t_desc = QuestionChooser.get_table_desc()
+        tbl = QuestionChooser.get_table_desc()
 
-        self.sqlite.execute("INSERT INTO %s VALUES('o_func', 'xxx', 1, 2)" % t_desc["name"])            # existing `id`
-        self.sqlite.execute("INSERT INTO %s VALUES('to_be_removed', 'xxx', 3, 4)" % t_desc["name"])     # removed `id`
+        self.sqlite.execute("INSERT INTO %s VALUES('o_func', 'xxx', 'xxx', 1, 2)" % tbl.name)
+        self.sqlite.execute("INSERT INTO %s VALUES('to_be_removed', 'xxx', 'xxx', 3, 4)" % tbl.name)
         self.sqlite.commit()
 
-        interviews_parser.update_db(self.htm_dir, self.sqlite)
+        interviews_parser.update_db(self.md_dir, self.htm_dir, self.sqlite)
 
         with open(TestQAParser.ALL_IDS_SQL, "r") as all_ids_file:
             query = all_ids_file.read()
-            cursor = self.sqlite.execute(query % (t_desc["name"], t_desc["id_col"]))
+            cursor = self.sqlite.execute(query % (tbl.name, tbl.id_col))
             self.assertEqual(TestQAParser.QA_CNT, cursor.fetchone()[0])
 
-        cursor = self.sqlite.execute("SELECT * FROM %s WHERE %s = 'o_func'" % (t_desc["name"], t_desc["id_col"]))
+        cursor = self.sqlite.execute("SELECT * FROM %s WHERE %s = 'o_func'" % (tbl.name, tbl.id_col))
         row = cursor.fetchone()
-        self.assertEqual(1, row[TestQAParser.CORRECT])
-        self.assertEqual(2, row[TestQAParser.WRONG])
+        self.assertEqual(1, row[tbl.correct_idx])
+        self.assertEqual(2, row[tbl.wrong_idx])
 
-        cursor = self.sqlite.execute("SELECT * FROM %s WHERE %s = 'iterator_for_algo'" %
-                                     (t_desc["name"], t_desc["id_col"]))
+        cursor = self.sqlite.execute("SELECT * FROM %s WHERE %s = 'iterator_for_algo'" % (tbl.name, tbl.id_col))
         row = cursor.fetchone()
-        self.assertEqual(0, row[TestQAParser.CORRECT])
-        self.assertEqual(0, row[TestQAParser.WRONG])
+        self.assertEqual(0, row[tbl.correct_idx])
+        self.assertEqual(0, row[tbl.wrong_idx])
 
-        cursor = self.sqlite.execute("SELECT * FROM %s WHERE %s = 'to_be_removed'" % (t_desc["name"], t_desc["id_col"]))
+        cursor = self.sqlite.execute("SELECT * FROM %s WHERE %s = 'to_be_removed'" % (tbl.name, tbl.id_col))
         self.assertEqual(None, cursor.fetchone())
 
-        cursor = self.sqlite.execute("SELECT COUNT(*) FROM %s" % t_desc["name"])
+        cursor = self.sqlite.execute("SELECT COUNT(*) FROM %s" % tbl.name)
         self.assertEqual(TestQAParser.QA_CNT, cursor.fetchone()[TestQAParser.CNT])
-
-        self.clean_up()
 
     def clean_up(self):
         if self.sqlite:
             self.sqlite.close()
         if os.path.isfile(self.db_path):
             os.remove(self.db_path)
-        shutil.rmtree(interviews_parser.get_tmp_app_dir())
+
+        tmp_app_dir = interviews_parser.get_tmp_app_dir()
+        if os.path.isdir(tmp_app_dir):
+            shutil.rmtree(tmp_app_dir)
 
     def test_lookup_and_insert(self):
         self.assertEqual(("abc!def", 4), interviews_parser.lookup_and_insert("abcdef", "bc", "!", 0, True))
@@ -107,6 +108,9 @@ class TestQAParser(unittest.TestCase):
         with open("test/processed.htm", "r") as processed_f:
             prcsd = processed_f.read()
         self.assertEqual(prcsd, interviews_parser.hide_answer(src))
+
+    def tearDown(self):
+        self.clean_up()
 
 
 if __name__ == '__main__':

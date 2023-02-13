@@ -1,8 +1,9 @@
 DROP TABLE qa;
 
-CREATE TABLE qa (
+CREATE TABLE qa2 (
     id TEXT NOT NULL PRIMARY KEY,
-    qa BLOB NOT NULL,
+    qa TEXT NOT NULL,
+    md TEXT NOT NULL,
     correct INTEGER NOT NULL,
     wrong INTEGER NOT NULL
 );
@@ -13,5 +14,7 @@ INSERT INTO qa VALUES ("qa4", 'single quotes', 0, 0);
 
 SELECT COUNT(*) FROM qa WHERE id IN ("qa1", "qa2");
 
-DELETE FROM qa WHERE id in ('qa1')
+DELETE FROM qa2
 
+SELECT id, qa, '', correct, wrong FROM qa_stats;
+INSERT INTO qa2 SELECT id, '', '', correct, wrong FROM qa_stats;

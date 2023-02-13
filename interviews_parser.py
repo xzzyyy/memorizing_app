@@ -78,20 +78,6 @@ def convert_to_htm(md_dir, htm_dir):
                         "-o", "%s\\%s" % (htm_dir, "%s.htm" % qa_id)])
 
 
-def create_db(db_path):
-    sqlite = sqlite3.connect(db_path)
-    sqlite.execute("""
-        CREATE TABLE qa (
-        id TEXT NOT NULL PRIMARY KEY,
-        qa BLOB NOT NULL,
-        correct INTEGER NOT NULL,
-        wrong INTEGER NOT NULL
-        )
-    """)
-    sqlite.commit()
-    return sqlite
-
-
 def lookup_and_insert(s, lookup, ins, pos, after):
     pos = s.find(lookup, pos)
     if after:
@@ -112,12 +98,12 @@ def hide_answer(htm_str):
     return lookup_and_insert(htm_str, "</body>\n", "</details>\n", pos, False)[0]
 
 
-def update_db(htm_dir, sqlite):
-    t_desc = QuestionChooser.get_table_desc()
+def update_db(md_dir, htm_dir, sqlite):
+    tbl = QuestionChooser.get_table_desc()
     existing_ids = set()
     file_ids = set()
 
-    cursor = sqlite.execute("SELECT %s FROM %s" % (t_desc["id_col"], t_desc["name"]))
+    cursor = sqlite.execute("SELECT %s FROM %s" % (tbl.id_col, tbl.name))
     row = cursor.fetchone()
     while row:
         existing_ids.add(row[0])
@@ -127,23 +113,26 @@ def update_db(htm_dir, sqlite):
         qa_id = os.path.splitext(htm_fn)[0]
         file_ids.add(qa_id)
 
-        cursor = sqlite.execute("SELECT * FROM %s WHERE %s = ?" % (t_desc["name"], t_desc["id_col"]), [qa_id])
+        cursor = sqlite.execute("SELECT * FROM %s WHERE %s = ?" % (tbl.name, tbl.id_col), [qa_id])
         present = True
         if not cursor.fetchone():
             present = False
 
-        with open("%s\\%s" % (htm_dir, htm_fn), 'r', encoding="utf8") as htm:
-            htm_bytes = hide_answer(htm.read()).encode()
+        with open("%s\\%s.md" % (md_dir, qa_id), 'r', encoding="utf8") as md_f:
+            md_str = md_f.read()
+        with open("%s\\%s.htm" % (htm_dir, qa_id), 'r', encoding="utf8") as htm_f:
+            htm_str = hide_answer(htm_f.read())
             if not present:
-                sqlite.execute("INSERT INTO %s VALUES (?, ?, 0, 0)" % t_desc["name"], (qa_id, memoryview(htm_bytes)))
+                sqlite.execute("INSERT INTO %s VALUES (?, ?, ?, 0, 0)" % tbl.name, (qa_id, htm_str, md_str))
             else:
-                sqlite.execute("UPDATE %s SET %s = ? WHERE %s = ?" %
-                               (t_desc["name"], t_desc["qa_col"], t_desc["id_col"]), (memoryview(htm_bytes), qa_id))
+                sqlite.execute("UPDATE %s SET %s = ?, %s = ? WHERE %s = ?" %
+                               (tbl.name, tbl.qa_col, tbl.md_col, tbl.id_col),
+                               (htm_str, md_str, qa_id))
     sqlite.commit()
 
     to_remove = existing_ids.difference(file_ids)
     for qa_id in to_remove:
-        sqlite.execute("DELETE FROM %s WHERE %s = ?" % (t_desc["name"], t_desc["id_col"]), [qa_id])
+        sqlite.execute("DELETE FROM %s WHERE %s = ?" % (tbl.name, tbl.id_col), [qa_id])
     sqlite.commit()
 
 
@@ -159,7 +148,7 @@ def update_qa_db(md_path, db_path):
     qa_strs = parse_md(md_path)
     write_mds(qa_strs)
     convert_to_htm(md_dir, htm_dir)
-    update_db(htm_dir, sqlite)
+    update_db(md_dir, htm_dir, sqlite)
 
     sqlite.close()
     remove_tmps()

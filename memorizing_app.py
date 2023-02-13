@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout
 from PyQt6.QtWidgets import QFileDialog
 from PyQt6.QtWebEngineWidgets import QWebEngineView
+from PyQt6.QtWebEngineCore import QWebEnginePage
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import QSize
 from question_chooser import QuestionChooser
@@ -25,6 +26,7 @@ class MemorizingAppWindow(QMainWindow):
 
         self.qc = None
         self.qa_id = ""
+        self.md_str = ""
         self.init_logic()
 
     def init_ui(self):
@@ -38,7 +40,9 @@ class MemorizingAppWindow(QMainWindow):
 
         v_lay = QVBoxLayout()
         cw.setLayout(v_lay)
+
         self.browser = QWebEngineView()
+        self.browser.pageAction(QWebEnginePage.WebAction.SavePage).triggered.connect(self.save_md)
         v_lay.addWidget(self.browser)
 
         h_lay = QHBoxLayout()
@@ -50,11 +54,13 @@ class MemorizingAppWindow(QMainWindow):
         self.bt_correct.setIconSize(QSize(32, 32))
         self.bt_wrong.setIconSize(QSize(32, 32))
         self.bt_parse_md.setMaximumWidth(25)
-        self.bt_correct.setDisabled(True)
-        self.bt_wrong.setDisabled(True)
         h_lay.addWidget(self.bt_correct)
         h_lay.addWidget(self.bt_wrong)
         h_lay.addWidget(self.bt_parse_md)
+
+        self.bt_correct.setDisabled(True)
+        self.bt_wrong.setDisabled(True)
+        self.browser.setDisabled(True)
 
         self.bt_correct.clicked.connect(self.correct_clicked)
         self.bt_wrong.clicked.connect(self.wrong_clicked)
@@ -65,7 +71,7 @@ class MemorizingAppWindow(QMainWindow):
         self.next_qa()
 
     def next_qa(self):
-        self.qa_id, qa_str = self.qc.get_question()
+        self.qa_id, qa_str, self.md_str = self.qc.get_question()
         if not self.qa_id:
             qa_str = """
                 <!DOCTYPE html>
@@ -80,11 +86,19 @@ class MemorizingAppWindow(QMainWindow):
             """
             self.bt_correct.setEnabled(False)
             self.bt_wrong.setEnabled(False)
+            self.browser.setEnabled(False)
         self.browser.setHtml(qa_str)
 
         if self.qa_id:
             self.bt_correct.setEnabled(True)
             self.bt_wrong.setEnabled(True)
+            self.browser.setEnabled(True)
+
+    def save_md(self):
+        fn = self.qa_id + ".md"
+        with open(fn, "w") as md:
+            md.write(self.md_str)
+            print("saved:", fn)
 
     def correct_clicked(self):
         self.qc.store_answer(self.qa_id, True)
