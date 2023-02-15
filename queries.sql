@@ -1,6 +1,6 @@
-DROP TABLE qa;
+DROP TABLE qa_stats;
 
-CREATE TABLE qa2 (
+CREATE TABLE qa_stats (
     id TEXT NOT NULL PRIMARY KEY,
     qa TEXT NOT NULL,
     md TEXT NOT NULL,
@@ -18,3 +18,4 @@ DELETE FROM qa2
 
 SELECT id, qa, '', correct, wrong FROM qa_stats;
 INSERT INTO qa2 SELECT id, '', '', correct, wrong FROM qa_stats;
+INSERT INTO qa_stats SELECT * FROM qa2;

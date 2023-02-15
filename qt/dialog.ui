@@ -15,21 +15,17 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QTextBrowser" name="textBrowser">
-     <property name="html">
-      <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;title&gt;iterator_for_algo&lt;/title&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-hr { height: 1px; border-width: 0; }
-li.unchecked::marker { content: &quot;\2610&quot;; }
-li.checked::marker { content: &quot;\2612&quot;; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;h1 style=&quot; margin-top:18px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; line-height:150%;&quot;&gt;&lt;a name=&quot;title-block-header&quot;&gt;&lt;/a&gt;&lt;span style=&quot; font-family:'Georgia','serif'; font-size:xx-large; font-weight:700;&quot;&gt;i&lt;/span&gt;&lt;span style=&quot; font-family:'Georgia','serif'; font-size:xx-large; font-weight:700;&quot;&gt;terator_for_algo&lt;/span&gt;&lt;/h1&gt;
-&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:77px; margin-right:77px; -qt-block-indent:0; text-indent:0px; line-height:150%;&quot;&gt;&lt;span style=&quot; font-family:'Georgia','serif'; font-size:20px;&quot;&gt;what can be used as iterator for STL algorithms?&lt;/span&gt;&lt;/p&gt;
-&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;
-&lt;li style=&quot; font-family:'Georgia','serif'; font-size:20px;&quot; style=&quot; margin-top:12px; margin-bottom:0px; margin-left:37px; margin-right:37px; -qt-block-indent:0; text-indent:0px; line-height:150%;&quot;&gt;&lt;span style=&quot; font-size:20px;&quot;&gt;instance of class&lt;/span&gt;&lt;/li&gt;
-&lt;li style=&quot; font-family:'Georgia','serif'; font-size:20px;&quot; style=&quot; margin-top:0px; margin-bottom:12px; margin-left:37px; margin-right:37px; -qt-block-indent:0; text-indent:0px; line-height:150%;&quot;&gt;&lt;span style=&quot; font-size:20px;&quot;&gt;raw pointer if elements are contiguous in memory (&lt;/span&gt;&lt;span style=&quot; font-family:'Courier New'; font-size:20px;&quot;&gt;array&lt;/span&gt;&lt;span style=&quot; font-size:20px;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot; font-family:'Courier New'; font-size:20px;&quot;&gt;vector&lt;/span&gt;&lt;span style=&quot; font-size:20px;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot; font-family:'Courier New'; font-size:20px;&quot;&gt;deque&lt;/span&gt;&lt;span style=&quot; font-size:20px;&quot;&gt;)&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;
-&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:37px; margin-right:37px; -qt-block-indent:0; text-indent:0px; line-height:150%;&quot;&gt;&lt;span style=&quot; font-family:'Georgia','serif'; font-size:20px; font-style:italic;&quot;&gt;ref&lt;/span&gt;&lt;span style=&quot; font-family:'Georgia','serif'; font-size:20px;&quot;&gt;: &lt;/span&gt;&lt;a href=&quot;https://stackoverflow.com/questions/16445957/can-raw-pointers-be-used-instead-of-iterators-with-stl-algorithms-for-containers&quot;&gt;&lt;span style=&quot; font-family:'Georgia','serif'; font-size:20px; text-decoration: underline; color:#0000ff;&quot;&gt;Can raw pointers be used instead of iterators with STL algorithms for containers with linear storage?&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:'Georgia','serif'; font-size:20px;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot; font-family:'Georgia','serif'; font-size:20px; font-style:italic;&quot;&gt;id&lt;/span&gt;&lt;span style=&quot; font-family:'Georgia','serif'; font-size:20px;&quot;&gt;: &lt;/span&gt;&lt;span style=&quot; font-family:'Courier New'; font-size:20px;&quot;&gt;iterator_for_algo&lt;/span&gt; &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <widget class="QWebEngineView" name="webEngineView">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="url">
+      <url>
+       <string>about:blank</string>
+      </url>
      </property>
     </widget>
    </item>
@@ -92,6 +88,13 @@ li.checked::marker { content: &quot;\2612&quot;; }
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QWebEngineView</class>
+   <extends>QWidget</extends>
+   <header location="global">QtWebEngineWidgets/QWebEngineView</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
