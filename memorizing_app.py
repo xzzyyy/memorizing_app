@@ -35,7 +35,7 @@ class MemorizingAppWindow(QMainWindow):
         self.setWindowTitle("Memorizing App")
         self.setMinimumSize(640, 480)
 
-        script_path = os.path.dirname(os.path.realpath(__file__))
+        script_path = os.path.dirname(__file__)
         self.setWindowIcon(QIcon("%s/qt/strawberry.ico" % script_path))
 
         v_lay = QVBoxLayout()

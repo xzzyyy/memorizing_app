@@ -6,23 +6,22 @@ import random
 
 class QuestionChooser:
 
-    class Tbl:
-        def __init__(self):
-            self.name = "qa_stats"
-            self.id_col = "id"
-            self.qa_col = "qa"
-            self.md_col = "md"
-            self.correct_col = "correct"
-            self.wrong_col = "wrong"
-            self.id_idx = 0
-            self.qa_idx = 1
-            self.md_idx = 2
-            self.correct_idx = 3
-            self.wrong_idx = 4
+    class QaTbl:
+        name = "qa_stats"
+        id_col = "id"
+        qa_col = "qa"
+        md_col = "md"
+        correct_col = "correct"
+        wrong_col = "wrong"
+        id_idx = 0
+        qa_idx = 1
+        md_idx = 2
+        correct_idx = 3
+        wrong_idx = 4
 
     @staticmethod
     def get_table_desc():
-        return QuestionChooser.Tbl()
+        return QuestionChooser.QaTbl
 
     @staticmethod
     def create_table(sqlite):
