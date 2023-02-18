@@ -99,7 +99,7 @@ def hide_answer(htm_str):
 
 
 def update_db(md_dir, htm_dir, sqlite):
-    tbl = QuestionChooser.get_table_desc()
+    tbl = QuestionChooser.get_qa_tbl()
     existing_ids = set()
     file_ids = set()
 

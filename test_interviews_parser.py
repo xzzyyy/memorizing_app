@@ -51,7 +51,7 @@ class TestQAParser(unittest.TestCase):
 
         self.sqlite = sqlite3.connect(self.db_path)
         QuestionChooser.create_table(self.sqlite)
-        tbl = QuestionChooser.get_table_desc()
+        tbl = QuestionChooser.get_qa_tbl()
 
         self.sqlite.execute("INSERT INTO %s VALUES('o_func', 'xxx', 'xxx', 1, 2)" % tbl.name)
         self.sqlite.execute("INSERT INTO %s VALUES('to_be_removed', 'xxx', 'xxx', 3, 4)" % tbl.name)
