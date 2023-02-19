@@ -112,6 +112,7 @@ def update_db(md_dir, htm_dir, sqlite):
         existing_ids.add(row[0])
         row = cursor.fetchone()
 
+    updated_cnt = 0
     for htm_fn in os.listdir(htm_dir):
         qa_id = os.path.splitext(htm_fn)[0]
         file_ids.add(qa_id)
@@ -121,22 +122,32 @@ def update_db(md_dir, htm_dir, sqlite):
         if not cursor.fetchone():
             present = False
 
-        with open("%s\\%s.md" % (md_dir, qa_id), 'r', encoding="utf8") as md_f:
-            md_str = md_f.read()
-        with open("%s\\%s.htm" % (htm_dir, qa_id), 'r', encoding="utf8") as htm_f:
-            htm_str = hide_answer(htm_f.read())
-            if not present:
-                sqlite.execute("INSERT INTO %s VALUES (?, ?, ?, 0, 0)" % tbl.name, (qa_id, htm_str, md_str))
-            else:
-                sqlite.execute("UPDATE %s SET %s = ?, %s = ? WHERE %s = ?" %
-                               (tbl.name, tbl.qa_col, tbl.md_col, tbl.id_col),
-                               (htm_str, md_str, qa_id))
-    sqlite.commit()
+        try:
+            in_fn = "%s\\%s.md" % (md_dir, qa_id)
+            with open(in_fn, 'r', encoding="utf8") as md_f:
+                md_str = md_f.read()
+
+            in_fn = "%s\\%s.htm" % (htm_dir, qa_id)
+            with open(in_fn, 'r', encoding="utf8") as htm_f:
+                htm_str = hide_answer(htm_f.read())
+                if not present:
+                    sqlite.execute("INSERT INTO %s VALUES (?, ?, ?, 0, 0)" % tbl.name, (qa_id, htm_str, md_str))
+                else:
+                    sqlite.execute("UPDATE %s SET %s = ?, %s = ? WHERE %s = ?" %
+                                   (tbl.name, tbl.qa_col, tbl.md_col, tbl.id_col),
+                                   (htm_str, md_str, qa_id))
+                sqlite.commit()
+                updated_cnt += 1
+
+        except UnicodeDecodeError:
+            print("error: bad encoding of file:", in_fn)
 
     # to_remove = existing_ids.difference(file_ids)
     # for qa_id in to_remove:
     #     sqlite.execute("DELETE FROM %s WHERE %s = ?" % (tbl.name, tbl.id_col), [qa_id])
     # sqlite.commit()
+
+    return updated_cnt
 
 
 def remove_tmps():
@@ -156,8 +167,9 @@ def update_qa_db(md_path, db_path):
         qa_strs = parse_md(md_path)
         write_mds(qa_strs)
         convert_to_htm(md_dir, htm_dir)
-        update_db(md_dir, htm_dir, sqlite)
+        updated_cnt = update_db(md_dir, htm_dir, sqlite)
     finally:
         sqlite.close()
+        remove_tmps()
 
-    remove_tmps()
+    return updated_cnt

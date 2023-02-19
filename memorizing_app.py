@@ -96,7 +96,7 @@ class MemorizingAppWindow(QMainWindow):
 
     def save_md(self):
         fn = self.qa_id + ".md"
-        with open(fn, "w") as md:
+        with open(fn, "w", encoding="utf8") as md:
             md.write(self.md_str)
             print("saved:", fn)
 
@@ -115,7 +115,8 @@ class MemorizingAppWindow(QMainWindow):
             return
 
         for path in paths_with_filter[0]:
-            interviews_parser.update_qa_db(path, self.DB_PATH)
+            print("file: %s, updated: %d" % (os.path.basename(path),
+                                             interviews_parser.update_qa_db(path, self.DB_PATH)))
 
         self.next_qa()
 

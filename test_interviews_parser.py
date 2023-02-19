@@ -126,6 +126,13 @@ class TestQAParser(unittest.TestCase):
             "_id_: `qa.1`\n"
         ])
 
+    def test_wrong_encoding_not_crash(self):
+        qc = QuestionChooser(self.db_path)
+        try:
+            self.assertEqual(0, interviews_parser.update_qa_db("test/bad_syntax.md", self.db_path))
+        finally:
+            qc.release()
+
     def tearDown(self):
         if os.path.isdir(self.prj_dir):
             shutil.rmtree(self.prj_dir)

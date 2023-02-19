@@ -26,4 +26,4 @@ SELECT id, qa, '', correct, wrong FROM qa_stats;
 INSERT INTO qa2 SELECT id, '', '', correct, wrong FROM qa_stats;
 INSERT INTO qa_stats SELECT * FROM qa2;
 
-SELECT * FROM qa_stats WHERE id = 'code_review'
+SELECT * FROM qa_stats WHERE id = 'work_start'
