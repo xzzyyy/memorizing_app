@@ -13,8 +13,8 @@ class TestQAParser(unittest.TestCase):
     CNT = 0
 
     def setUp(self):
-        self.sqlite = None
         self.set_temp_dirs()
+        os.mkdir(self.prj_dir)
 
     def test_parser_algo(self):
         qa_strs = interviews_parser.parse([
@@ -35,9 +35,7 @@ class TestQAParser(unittest.TestCase):
         self.db_path = "%s\\%s\\test.sqlite" % (tmp_dir, interviews_parser.PRJ_NAME)
         self.prj_dir = "%s\\%s" % (tmp_dir, interviews_parser.PRJ_NAME)
 
-    def test_update_db(self):
-        self.set_temp_dirs()
-
+    def test_update_db_substeps(self):
         qa_strs = interviews_parser.parse_md(TestQAParser.MD_PATH)
         self.assertEqual(TestQAParser.QA_CNT, len(qa_strs))
 
@@ -49,46 +47,58 @@ class TestQAParser(unittest.TestCase):
         interviews_parser.convert_to_htm(self.md_dir, self.htm_dir)
         self.assertEqual(TestQAParser.QA_CNT, len(os.listdir(self.htm_dir)))
 
-        self.sqlite = sqlite3.connect(self.db_path)
-        QuestionChooser.create_table(self.sqlite)
-        tbl = QuestionChooser.get_qa_tbl()
+        sqlite = sqlite3.connect(self.db_path)
+        try:
+            QuestionChooser.create_table(sqlite)
+            tbl = QuestionChooser.get_qa_tbl()
 
-        self.sqlite.execute("INSERT INTO %s VALUES('o_func', 'xxx', 'xxx', 1, 2)" % tbl.name)
-        self.sqlite.execute("INSERT INTO %s VALUES('to_be_removed', 'xxx', 'xxx', 3, 4)" % tbl.name)
-        self.sqlite.commit()
+            sqlite.execute("INSERT INTO %s VALUES('o_func', 'xxx', 'xxx', 1, 2)" % tbl.name)
+            # sqlite.execute("INSERT INTO %s VALUES('to_be_removed', 'xxx', 'xxx', 3, 4)" % tbl.name)
+            sqlite.commit()
 
-        interviews_parser.update_db(self.md_dir, self.htm_dir, self.sqlite)
+            interviews_parser.update_db(self.md_dir, self.htm_dir, sqlite)
 
-        with open(TestQAParser.ALL_IDS_SQL, "r") as all_ids_file:
-            query = all_ids_file.read()
-            cursor = self.sqlite.execute(query % (tbl.name, tbl.id_col))
-            self.assertEqual(TestQAParser.QA_CNT, cursor.fetchone()[0])
+            with open(TestQAParser.ALL_IDS_SQL, "r") as all_ids_file:
+                query = all_ids_file.read()
+                cursor = sqlite.execute(query % (tbl.name, tbl.id_col))
+                self.assertEqual(TestQAParser.QA_CNT, cursor.fetchone()[0])
 
-        cursor = self.sqlite.execute("SELECT * FROM %s WHERE %s = 'o_func'" % (tbl.name, tbl.id_col))
-        row = cursor.fetchone()
-        self.assertEqual(1, row[tbl.correct_idx])
-        self.assertEqual(2, row[tbl.wrong_idx])
+            cursor = sqlite.execute("SELECT * FROM %s WHERE %s = 'o_func'" % (tbl.name, tbl.id_col))
+            row = cursor.fetchone()
+            self.assertEqual(1, row[tbl.correct_idx])
+            self.assertEqual(2, row[tbl.wrong_idx])
 
-        cursor = self.sqlite.execute("SELECT * FROM %s WHERE %s = 'iterator_for_algo'" % (tbl.name, tbl.id_col))
-        row = cursor.fetchone()
-        self.assertEqual(0, row[tbl.correct_idx])
-        self.assertEqual(0, row[tbl.wrong_idx])
+            cursor = sqlite.execute("SELECT * FROM %s WHERE %s = 'iterator'" % (tbl.name, tbl.id_col))
+            row = cursor.fetchone()
+            self.assertEqual(0, row[tbl.correct_idx])
+            self.assertEqual(0, row[tbl.wrong_idx])
 
-        cursor = self.sqlite.execute("SELECT * FROM %s WHERE %s = 'to_be_removed'" % (tbl.name, tbl.id_col))
-        self.assertEqual(None, cursor.fetchone())
+            # cursor = sqlite.execute("SELECT * FROM %s WHERE %s = 'to_be_removed'" % (tbl.name, tbl.id_col))
+            # self.assertEqual(None, cursor.fetchone())
 
-        cursor = self.sqlite.execute("SELECT COUNT(*) FROM %s" % tbl.name)
-        self.assertEqual(TestQAParser.QA_CNT, cursor.fetchone()[TestQAParser.CNT])
+            cursor = sqlite.execute("SELECT COUNT(*) FROM %s" % tbl.name)
+            self.assertEqual(TestQAParser.QA_CNT, cursor.fetchone()[TestQAParser.CNT])
+        finally:
+            sqlite.close()
 
-    def clean_up(self):
-        if self.sqlite:
-            self.sqlite.close()
-        if os.path.isfile(self.db_path):
-            os.remove(self.db_path)
+    def test_update_db_interface(self):
+        sqlite = sqlite3.connect(self.db_path)
+        try:
+            QuestionChooser.create_table(sqlite)
+            interviews_parser.update_qa_db(self.MD_PATH, self.db_path)
 
-        tmp_app_dir = interviews_parser.get_tmp_app_dir()
-        if os.path.isdir(tmp_app_dir):
-            shutil.rmtree(tmp_app_dir)
+            id1 = "single_qa_1"
+            id2 = "single_qa_2"
+            for fn in "test/%s.md" % id1, "test/%s.md" % id2:
+                interviews_parser.update_qa_db(fn, self.db_path)
+
+            tbl = QuestionChooser.get_qa_tbl()
+            for qa_id in id1, id2:
+                data = sqlite.execute("SELECT * FROM %s WHERE %s = ?" % (tbl.name, tbl.id_col), [qa_id])
+                row = data.fetchone()
+                self.assertNotEqual(-1, row[tbl.qa_idx].find("test phrase"))
+        finally:
+            sqlite.close()
 
     def test_lookup_and_insert(self):
         self.assertEqual(("abc!def", 4), interviews_parser.lookup_and_insert("abcdef", "bc", "!", 0, True))
@@ -109,8 +119,16 @@ class TestQAParser(unittest.TestCase):
             prcsd = processed_f.read()
         self.assertEqual(prcsd, interviews_parser.hide_answer(src))
 
+    def test_wrong_id_syntax(self):
+        self.assertRaises(SyntaxError, interviews_parser.parse, [
+            "> q1\n",
+            "a1\n",
+            "_id_: `qa.1`\n"
+        ])
+
     def tearDown(self):
-        self.clean_up()
+        if os.path.isdir(self.prj_dir):
+            shutil.rmtree(self.prj_dir)
 
 
 if __name__ == '__main__':

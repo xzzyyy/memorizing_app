@@ -20,6 +20,7 @@ def get_tmp_app_dir():
     return "%s\\%s" % (tmp_dir, PRJ_NAME)
 
 
+# input `.md` should not have symbols other than alphanumeric and underscore in `id`
 def parse(lines_list):
     state = OUTSIDE
     cur_qa = ""
@@ -35,8 +36,10 @@ def parse(lines_list):
         if state == INSIDE and line.startswith("_id_: "):
             state = OUTSIDE
 
-            qa_id = re.match("_id_: `(\\w+)`", line).group(1)
-            qa_strs[qa_id] = cur_qa
+            m = re.match("_id_: `(\\w+)`", line)
+            if not m:
+                raise SyntaxError("syntax error in `id` line: [%s]" % line.rstrip())
+            qa_strs[m.group(1)] = cur_qa
             cur_qa = ""
 
     return qa_strs
@@ -130,14 +133,18 @@ def update_db(md_dir, htm_dir, sqlite):
                                (htm_str, md_str, qa_id))
     sqlite.commit()
 
-    to_remove = existing_ids.difference(file_ids)
-    for qa_id in to_remove:
-        sqlite.execute("DELETE FROM %s WHERE %s = ?" % (tbl.name, tbl.id_col), [qa_id])
-    sqlite.commit()
+    # to_remove = existing_ids.difference(file_ids)
+    # for qa_id in to_remove:
+    #     sqlite.execute("DELETE FROM %s WHERE %s = ?" % (tbl.name, tbl.id_col), [qa_id])
+    # sqlite.commit()
 
 
 def remove_tmps():
-    shutil.rmtree(get_tmp_app_dir())
+    tmp_dir = get_tmp_app_dir()
+    try:
+        shutil.rmtree(tmp_dir)
+    except OSError:                 # busy by `test_interviews_parser.py` database
+        pass
 
 
 def update_qa_db(md_path, db_path):
@@ -145,10 +152,12 @@ def update_qa_db(md_path, db_path):
     md_dir, htm_dir = get_tmp_dirs()
     sqlite = sqlite3.connect(db_path)
 
-    qa_strs = parse_md(md_path)
-    write_mds(qa_strs)
-    convert_to_htm(md_dir, htm_dir)
-    update_db(md_dir, htm_dir, sqlite)
+    try:
+        qa_strs = parse_md(md_path)
+        write_mds(qa_strs)
+        convert_to_htm(md_dir, htm_dir)
+        update_db(md_dir, htm_dir, sqlite)
+    finally:
+        sqlite.close()
 
-    sqlite.close()
     remove_tmps()

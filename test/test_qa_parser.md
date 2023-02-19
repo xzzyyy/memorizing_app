@@ -81,7 +81,7 @@ _id_: `opt_add_vs_mult`
     - Luxoft -> Citi -> `dosa` -> `dosa_publisher` -> `ProtoPublisher`
     - Qt
 	
-_id_: `design_patterns`
+_id_: `single_qa_2`
 
 ---
 
@@ -103,7 +103,7 @@ _id_: `iterator`
 
 _ref_: [Can raw pointers be used instead of iterators with STL algorithms for containers with linear storage?](
 https://stackoverflow.com/questions/16445957/can-raw-pointers-be-used-instead-of-iterators-with-stl-algorithms-for-containers)  
-_id_: `iterator_for_algo`
+_id_: `single_qa_1`
 
 ---
 

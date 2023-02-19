@@ -109,11 +109,14 @@ class MemorizingAppWindow(QMainWindow):
         self.next_qa()
 
     def parse_md_clicked(self):
-        path_with_filter = QFileDialog.getOpenFileName(self, "select `.md` file to parse", filter="*.md")
-        if not path_with_filter[0]:
+        paths_with_filter = QFileDialog.getOpenFileNames(self, "select .md files to parse",
+                                                         filter="markdown files (*.md)")
+        if not paths_with_filter[0]:
             return
 
-        interviews_parser.update_qa_db(path_with_filter[0], self.DB_PATH)
+        for path in paths_with_filter[0]:
+            interviews_parser.update_qa_db(path, self.DB_PATH)
+
         self.next_qa()
 
     def on_close(self):
