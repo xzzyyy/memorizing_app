@@ -1,18 +1,14 @@
 import os
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtWidgets import QMainWindow, QWidget
-from PyQt6.QtWidgets import QPushButton
-from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout
-from PyQt6.QtWidgets import QFileDialog
-from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtWebEngineCore import QWebEnginePage
-from PyQt6.QtGui import QIcon
-from PyQt6.QtCore import QSize
+import PyQt6.QtWidgets
+import PyQt6.QtWebEngineWidgets
+import PyQt6.QtWebEngineCore
+import PyQt6.QtGui
+import PyQt6.QtCore
 from question_chooser import QuestionChooser
 import interviews_parser
 
 
-class MemorizingAppWindow(QMainWindow):
+class MemorizingAppWindow(PyQt6.QtWidgets.QMainWindow):
     DB_PATH = "memorizing.sqlite"
 
     def __init__(self):
@@ -22,6 +18,7 @@ class MemorizingAppWindow(QMainWindow):
         self.bt_correct = None
         self.bt_wrong = None
         self.bt_parse_md = None
+        self.status = None
         self.init_ui()
 
         self.qc = None
@@ -30,29 +27,30 @@ class MemorizingAppWindow(QMainWindow):
         self.init_logic()
 
     def init_ui(self):
-        cw = QWidget()
+        cw = PyQt6.QtWidgets.QWidget()
         self.setCentralWidget(cw)
         self.setWindowTitle("Memorizing App")
         self.setMinimumSize(640, 480)
 
         script_path = os.path.dirname(__file__)
-        self.setWindowIcon(QIcon("%s/qt/strawberry.ico" % script_path))
+        self.setWindowIcon(PyQt6.QtGui.QIcon("%s/qt/strawberry.ico" % script_path))
 
-        v_lay = QVBoxLayout()
+        v_lay = PyQt6.QtWidgets.QVBoxLayout()
         cw.setLayout(v_lay)
 
-        self.browser = QWebEngineView()
-        self.browser.pageAction(QWebEnginePage.WebAction.SavePage).triggered.connect(self.save_md)
+        self.browser = PyQt6.QtWebEngineWidgets.QWebEngineView()
+        self.browser.pageAction(PyQt6.QtWebEngineCore.QWebEnginePage.WebAction.SavePage).triggered.connect(self.save_md)
         v_lay.addWidget(self.browser)
 
-        h_lay = QHBoxLayout()
+        h_lay = PyQt6.QtWidgets.QHBoxLayout()
         v_lay.addLayout(h_lay)
 
-        self.bt_correct = QPushButton(QIcon("%s/qt/strawberry.ico" % script_path), "CORRECT")
-        self.bt_wrong = QPushButton(QIcon("%s/qt/electrum.ico" % script_path), "WRONG")
-        self.bt_parse_md = QPushButton("...")
-        self.bt_correct.setIconSize(QSize(32, 32))
-        self.bt_wrong.setIconSize(QSize(32, 32))
+        self.bt_correct = PyQt6.QtWidgets.QPushButton(PyQt6.QtGui.QIcon("%s/qt/strawberry.ico" % script_path),
+                                                      "CORRECT")
+        self.bt_wrong = PyQt6.QtWidgets.QPushButton(PyQt6.QtGui.QIcon("%s/qt/electrum.ico" % script_path), "WRONG")
+        self.bt_parse_md = PyQt6.QtWidgets.QPushButton("...")
+        self.bt_correct.setIconSize(PyQt6.QtCore.QSize(32, 32))
+        self.bt_wrong.setIconSize(PyQt6.QtCore.QSize(32, 32))
         self.bt_parse_md.setMaximumWidth(25)
         h_lay.addWidget(self.bt_correct)
         h_lay.addWidget(self.bt_wrong)
@@ -66,8 +64,12 @@ class MemorizingAppWindow(QMainWindow):
         self.bt_wrong.clicked.connect(self.wrong_clicked)
         self.bt_parse_md.clicked.connect(self.parse_md_clicked)
 
+        self.status = PyQt6.QtWidgets.QStatusBar(cw)
+        self.setStatusBar(self.status)
+
     def init_logic(self):
         self.qc = QuestionChooser(self.DB_PATH)
+        self.update_status()
         self.next_qa()
 
     def next_qa(self):
@@ -102,15 +104,17 @@ class MemorizingAppWindow(QMainWindow):
 
     def correct_clicked(self):
         self.qc.store_answer(self.qa_id, True)
+        self.update_status()
         self.next_qa()
 
     def wrong_clicked(self):
         self.qc.store_answer(self.qa_id, False)
+        self.update_status()
         self.next_qa()
 
     def parse_md_clicked(self):
-        paths_with_filter = QFileDialog.getOpenFileNames(self, "select .md files to parse",
-                                                         filter="markdown files (*.md)")
+        paths_with_filter = PyQt6.QtWidgets.QFileDialog.getOpenFileNames(self, "select .md files to parse",
+                                                                         filter="markdown files (*.md)")
         if not paths_with_filter[0]:
             return
 
@@ -118,13 +122,18 @@ class MemorizingAppWindow(QMainWindow):
             print("file: %s, updated: %d" % (os.path.basename(path),
                                              interviews_parser.update_qa_db(path, self.DB_PATH)))
 
+        self.update_status()
         self.next_qa()
+
+    def update_status(self):
+        answered, cnt = self.qc.get_cnt()
+        self.status.showMessage("answered: %d, all: %d, all asked: %.1f" % (answered, cnt, float(answered) / cnt * 100))
 
     def on_close(self):
         self.qc.release()
 
 
-app = QApplication([])
+app = PyQt6.QtWidgets.QApplication([])
 window = MemorizingAppWindow()
 window.show()
 app.exec()

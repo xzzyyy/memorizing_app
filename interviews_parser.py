@@ -142,11 +142,6 @@ def update_db(md_dir, htm_dir, sqlite):
         except UnicodeDecodeError:
             print("error: bad encoding of file:", in_fn)
 
-    # to_remove = existing_ids.difference(file_ids)
-    # for qa_id in to_remove:
-    #     sqlite.execute("DELETE FROM %s WHERE %s = ?" % (tbl.name, tbl.id_col), [qa_id])
-    # sqlite.commit()
-
     return updated_cnt
 
 

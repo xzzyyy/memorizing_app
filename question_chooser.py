@@ -48,8 +48,17 @@ class QuestionChooser:
 
         return False
 
+    def get_cnt(self):
+        tbl = self.get_qa_tbl()
+        cur = self.conn.execute("SELECT (SELECT SUM(%s + %s) FROM %s) AS answered, (SELECT COUNT(*) FROM %s) AS cnt" %
+                                (tbl.correct_col, tbl.wrong_col, tbl.name, tbl.name))
+        row = cur.fetchone()
+        return row[0], row[1]
+
     def release(self):
         self.conn.close()
+
+    # --- private ---
 
     class QaTbl:
         name = "qa_stats"

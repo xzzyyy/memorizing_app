@@ -43,6 +43,10 @@ class TestQuestionChooser(unittest.TestCase):
 
         self.assertEqual(qa_id, restarted_id)
 
+    def test_get_cnt(self):
+        self.insert_test_rows()
+        self.assertEqual((12, 3), self.qc.get_cnt())
+
     def tearDown(self):
         self.conn.close()
         self.qc.release()
@@ -55,7 +59,7 @@ class TestQuestionChooser(unittest.TestCase):
         data = self.conn.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", [tbl.name])
         self.assertEqual(data.fetchone()[0], tbl.name)
 
-    def t_store_answer(self):
+    def insert_test_rows(self):
         tbl = self.qc.get_qa_tbl()
         self.conn.execute("INSERT INTO %s values(?, ?, ?, 3, 2)" % tbl.name,
                           (TestQuestionChooser.ID1, "test1 .htm", "test1 .md"))
@@ -64,6 +68,10 @@ class TestQuestionChooser(unittest.TestCase):
         self.conn.execute("INSERT INTO %s values(?, ?, ?, 2, 2)" % tbl.name,
                           (TestQuestionChooser.ID3, "test3 .htm", "test3 .md"))
         self.conn.commit()
+
+    def t_store_answer(self):
+        tbl = self.qc.get_qa_tbl()
+        self.insert_test_rows()
 
         self.qc.last_id = TestQuestionChooser.ID1
         self.assertFalse(self.qc.store_answer(TestQuestionChooser.ID1, True))

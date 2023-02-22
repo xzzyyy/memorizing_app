@@ -27,3 +27,6 @@ INSERT INTO qa2 SELECT id, '', '', correct, wrong FROM qa_stats;
 INSERT INTO qa_stats SELECT * FROM qa2;
 
 SELECT * FROM qa_stats WHERE id = 'work_start'
+
+SELECT SUM(wrong + correct) FROM qa_stats;
+SELECT (SELECT SUM(wrong + correct) FROM qa_stats) AS answered, (SELECT COUNT(*) FROM qa_stats) AS cnt;

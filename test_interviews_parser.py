@@ -46,7 +46,6 @@ class TestQAParser(unittest.TestCase):
             tbl = QuestionChooser.get_qa_tbl()
 
             sqlite.execute("INSERT INTO %s VALUES('o_func', 'xxx', 'xxx', 1, 2)" % tbl.name)
-            # sqlite.execute("INSERT INTO %s VALUES('to_be_removed', 'xxx', 'xxx', 3, 4)" % tbl.name)
             sqlite.commit()
 
             interviews_parser.update_db(self.md_dir, self.htm_dir, sqlite)
@@ -65,9 +64,6 @@ class TestQAParser(unittest.TestCase):
             row = cursor.fetchone()
             self.assertEqual(0, row[tbl.correct_idx])
             self.assertEqual(0, row[tbl.wrong_idx])
-
-            # cursor = sqlite.execute("SELECT * FROM %s WHERE %s = 'to_be_removed'" % (tbl.name, tbl.id_col))
-            # self.assertEqual(None, cursor.fetchone())
 
             cursor = sqlite.execute("SELECT COUNT(*) FROM %s" % tbl.name)
             self.assertEqual(TestQAParser.QA_CNT, cursor.fetchone()[TestQAParser.CNT])
