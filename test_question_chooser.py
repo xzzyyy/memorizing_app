@@ -14,6 +14,42 @@ class TestQuestionChooser(unittest.TestCase):
         self.qc = QuestionChooser(self.DB_PATH)
         self.conn = sqlite3.connect(self.DB_PATH)
 
+    def test_working(self):
+        self.t_init()
+        self.t_store_answer()
+        self.t_get_question()
+
+    def test_no_questions(self):
+        self.assertEqual(("", "", ""), self.qc.get_question())
+
+    def test_store_gives_error(self):
+        wrong_qa_id = "test"
+        self.qc.last_id = wrong_qa_id
+        self.assertTrue(self.qc.store_answer(wrong_qa_id, True))
+
+    def test_last_id_persistent(self):
+        tbl = self.qc.get_qa_tbl()
+        for i in range(100):
+            self.conn.execute("INSERT INTO %s VALUES (?, 'test .htm', 'test .md', 0, 0)" % tbl.name, [("qa" + str(i))])
+        self.conn.commit()
+
+        qa_id, htm, md = self.qc.get_question()
+        self.qc.release()
+        self.conn.close()
+
+        new_qc = QuestionChooser(self.DB_PATH)
+        restarted_id, htm, md = new_qc.get_question()
+        new_qc.release()
+
+        self.assertEqual(qa_id, restarted_id)
+
+    def tearDown(self):
+        self.conn.close()
+        self.qc.release()
+        os.remove(self.DB_PATH)
+
+    # --- private ---
+
     def t_init(self):
         tbl = self.qc.get_qa_tbl()
         data = self.conn.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", [tbl.name])
@@ -58,37 +94,3 @@ class TestQuestionChooser(unittest.TestCase):
         self.assertTrue(100 - error < q_count[TestQuestionChooser.ID1] < 100 + error)
         self.assertTrue(500 - error < q_count[TestQuestionChooser.ID2] < 500 + error)
         self.assertTrue(300 - error < q_count[TestQuestionChooser.ID3] < 300 + error)
-
-    def test_working(self):
-        self.t_init()
-        self.t_store_answer()
-        self.t_get_question()
-
-    def test_no_questions(self):
-        self.assertEqual(("", "", ""), self.qc.get_question())
-
-    def test_store_gives_error(self):
-        wrong_qa_id = "test"
-        self.qc.last_id = wrong_qa_id
-        self.assertTrue(self.qc.store_answer(wrong_qa_id, True))
-
-    def test_last_id_persistent(self):
-        tbl = self.qc.get_qa_tbl()
-        for i in range(100):
-            self.conn.execute("INSERT INTO %s VALUES (?, 'test .htm', 'test .md', 0, 0)" % tbl.name, [("qa" + str(i))])
-        self.conn.commit()
-
-        qa_id, htm, md = self.qc.get_question()
-        self.qc.release()
-        self.conn.close()
-
-        new_qc = QuestionChooser(self.DB_PATH)
-        restarted_id, htm, md = new_qc.get_question()
-        new_qc.release()
-
-        self.assertEqual(qa_id, restarted_id)
-
-    def tearDown(self):
-        self.conn.close()
-        self.qc.release()
-        os.remove(self.DB_PATH)

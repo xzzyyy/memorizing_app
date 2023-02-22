@@ -28,13 +28,6 @@ class TestQAParser(unittest.TestCase):
         self.assertEqual("> q1\na1\n_id_: `qa1`\n", qa_strs["qa1"])
         self.assertEqual("> q2\na2\n_id_: `qa2`\n", qa_strs["qa2"])
 
-    def set_temp_dirs(self):
-        tmp_dir = os.environ['TMP']
-        self.md_dir = "%s\\%s\\md_files" % (tmp_dir, interviews_parser.PRJ_NAME)
-        self.htm_dir = "%s\\%s\\htm_files" % (tmp_dir, interviews_parser.PRJ_NAME)
-        self.db_path = "%s\\%s\\test.sqlite" % (tmp_dir, interviews_parser.PRJ_NAME)
-        self.prj_dir = "%s\\%s" % (tmp_dir, interviews_parser.PRJ_NAME)
-
     def test_update_db_substeps(self):
         qa_strs = interviews_parser.parse_md(TestQAParser.MD_PATH)
         self.assertEqual(TestQAParser.QA_CNT, len(qa_strs))
@@ -136,6 +129,15 @@ class TestQAParser(unittest.TestCase):
     def tearDown(self):
         if os.path.isdir(self.prj_dir):
             shutil.rmtree(self.prj_dir)
+
+    # --- private ---
+
+    def set_temp_dirs(self):
+        tmp_dir = os.environ['TMP']
+        self.md_dir = "%s\\%s\\md_files" % (tmp_dir, interviews_parser.PRJ_NAME)
+        self.htm_dir = "%s\\%s\\htm_files" % (tmp_dir, interviews_parser.PRJ_NAME)
+        self.db_path = "%s\\%s\\test.sqlite" % (tmp_dir, interviews_parser.PRJ_NAME)
+        self.prj_dir = "%s\\%s" % (tmp_dir, interviews_parser.PRJ_NAME)
 
 
 if __name__ == '__main__':
