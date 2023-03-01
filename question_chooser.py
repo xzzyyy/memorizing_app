@@ -3,6 +3,8 @@ import random
 
 
 class QuestionChooser:
+    DB_PATH = "memorizing.sqlite"
+
     @staticmethod
     def get_qa_tbl():
         return QuestionChooser.QaTbl
@@ -54,6 +56,15 @@ class QuestionChooser:
                                 (tbl.correct_col, tbl.wrong_col, tbl.name, tbl.name))
         row = cur.fetchone()
         return row[0], row[1]
+
+    def all_mds(self):
+        tbl = self.get_qa_tbl()
+        cur = self.conn.execute("SELECT %s FROM %s" % (tbl.md_col, tbl.name))
+        md_idx = 0
+
+        rows = cur.fetchall()
+
+        return [r[md_idx] for r in rows]
 
     def release(self):
         self.conn.close()

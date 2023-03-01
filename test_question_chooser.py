@@ -47,6 +47,10 @@ class TestQuestionChooser(unittest.TestCase):
         self.insert_test_rows()
         self.assertEqual((12, 3), self.qc.get_cnt())
 
+    def test_all_mds(self):
+        self.insert_test_rows()
+        self.assertEqual(["md1", "md2", "md3"], self.qc.all_mds())
+
     def tearDown(self):
         self.conn.close()
         self.qc.release()
@@ -61,12 +65,9 @@ class TestQuestionChooser(unittest.TestCase):
 
     def insert_test_rows(self):
         tbl = self.qc.get_qa_tbl()
-        self.conn.execute("INSERT INTO %s values(?, ?, ?, 3, 2)" % tbl.name,
-                          (TestQuestionChooser.ID1, "test1 .htm", "test1 .md"))
-        self.conn.execute("INSERT INTO %s values(?, ?, ?, 1, 2)" % tbl.name,
-                          (TestQuestionChooser.ID2, "test2 .htm", "test2 .md"))
-        self.conn.execute("INSERT INTO %s values(?, ?, ?, 2, 2)" % tbl.name,
-                          (TestQuestionChooser.ID3, "test3 .htm", "test3 .md"))
+        self.conn.execute("INSERT INTO %s values(?, ?, ?, 3, 2)" % tbl.name, (TestQuestionChooser.ID1, "htm1", "md1"))
+        self.conn.execute("INSERT INTO %s values(?, ?, ?, 1, 2)" % tbl.name, (TestQuestionChooser.ID2, "htm2", "md2"))
+        self.conn.execute("INSERT INTO %s values(?, ?, ?, 2, 2)" % tbl.name, (TestQuestionChooser.ID3, "htm3", "md3"))
         self.conn.commit()
 
     def t_store_answer(self):
