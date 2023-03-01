@@ -4,10 +4,13 @@ import shutil
 import subprocess
 import sqlite3
 from question_chooser import QuestionChooser
+from server import MyHTTPRequestHandler
 
 OUTSIDE = 0
 INSIDE = 1
 PRJ_NAME = "MemorizingApp"
+
+REQ = MyHTTPRequestHandler.Request
 
 
 def get_tmp_dirs():
@@ -101,6 +104,30 @@ def hide_answer(htm_str):
     return lookup_and_insert(htm_str, "</body>\n", "</details>\n", pos, False)[0]
 
 
+BUTTONS_HTM = ('<form action="http://127.0.0.1:8000" style="display: inline">\n' +
+               '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
+               '    <input type="hidden" name="%s" value="%%s" style="display: inline">\n' +
+               '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
+               '    <input type="submit" value="CORRECT" style="display: inline">\n' +
+               '</form>\n' +
+               '<form action="http://127.0.0.1:8000" style="display: inline">\n' +
+               '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
+               '    <input type="hidden" name="%s" value="%%s" style="display: inline">\n' +
+               '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
+               '    <input type="submit" value="WRONG" style="display: inline">\n' +
+               '</form>\n') % (
+    REQ.act, REQ.store, REQ.id, REQ.is_correct, REQ.yes,
+    REQ.act, REQ.store, REQ.id, REQ.is_correct, REQ.no
+)
+
+
+def add_buttons(htm, qa_id):
+    anchor = "</details>\n"
+    pos = htm.find(anchor) + len(anchor)
+
+    return htm[:pos] + BUTTONS_HTM % (qa_id, qa_id) + htm[pos:]
+
+
 def update_db(md_dir, htm_dir, sqlite):
     tbl = QuestionChooser.get_qa_tbl()
     existing_ids = set()
@@ -122,14 +149,15 @@ def update_db(md_dir, htm_dir, sqlite):
         if not cursor.fetchone():
             present = False
 
+        in_fn = "%s\\%s.md" % (md_dir, qa_id)
         try:
-            in_fn = "%s\\%s.md" % (md_dir, qa_id)
             with open(in_fn, 'r', encoding="utf8") as md_f:
                 md_str = md_f.read()
 
             in_fn = "%s\\%s.htm" % (htm_dir, qa_id)
             with open(in_fn, 'r', encoding="utf8") as htm_f:
                 htm_str = hide_answer(htm_f.read())
+                htm_str = add_buttons(htm_str, qa_id)
                 if not present:
                     sqlite.execute("INSERT INTO %s VALUES (?, ?, ?, 0, 0)" % tbl.name, (qa_id, htm_str, md_str))
                 else:
