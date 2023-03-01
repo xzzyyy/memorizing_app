@@ -104,6 +104,7 @@ def hide_answer(htm_str):
     return lookup_and_insert(htm_str, "</body>\n", "</details>\n", pos, False)[0]
 
 
+STATS_PLACEHOLDER = "StAtS PlAcEhOlDeR"
 BUTTONS_HTM = ('<form action="http://127.0.0.1:8000" style="display: inline">\n' +
                '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
                '    <input type="hidden" name="%s" value="%%s" style="display: inline">\n' +
@@ -115,9 +116,10 @@ BUTTONS_HTM = ('<form action="http://127.0.0.1:8000" style="display: inline">\n'
                '    <input type="hidden" name="%s" value="%%s" style="display: inline">\n' +
                '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
                '    <input type="submit" value="WRONG" style="display: inline">\n' +
-               '</form>\n') % (
+               '</form>\n' +
+               '<p><b>stats: </b>%s</p>\n') % (
     REQ.act, REQ.store, REQ.id, REQ.is_correct, REQ.yes,
-    REQ.act, REQ.store, REQ.id, REQ.is_correct, REQ.no
+    REQ.act, REQ.store, REQ.id, REQ.is_correct, REQ.no, STATS_PLACEHOLDER
 )
 
 

@@ -154,3 +154,6 @@ class QuestionChooser:
                 self.conn.commit()
                 return self.last_id, row[qa_idx], row[md_idx]
             weight_sum += row[weight_idx]
+
+
+inst = QuestionChooser(QuestionChooser.DB_PATH)

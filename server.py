@@ -1,9 +1,11 @@
-import http.server
-import socketserver
 import io
 import shutil
 import sys
-from question_chooser import QuestionChooser
+import http.server
+import socketserver
+import urllib.parse
+import interviews_parser
+import question_chooser
 
 PORT = 8000
 
@@ -18,33 +20,41 @@ class MyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         yes = "yes"
         no = "no"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.qc = QuestionChooser(QuestionChooser.DB_PATH)
-
     def do_GET(self):
-        print("self.path =", self.path)
-        query = self.path[self.path.find('?') + 1:]
+        print("GET | %s" % self.path)
 
-        query_parts = query.split(',')
-        if query_parts[0] == "get_question":
-            answer = self.qc.get_question()
-        elif len(query_parts) == 3 and query_parts[0] == "answer" and \
-                (query_parts[2] == "correct" or query_parts[2] == "wrong"):
-            answer = "ok" if \
-                not self.qc.store_answer(query_parts[1], True if query_parts[2] == "correct" else False) \
-                else "no such question"
+        if self.path == "/":
+            qa_id, htm, md = question_chooser.inst.get_question()
+
+        elif self.path.startswith("/?"):
+            parms = urllib.parse.parse_qs(self.path[2:])
+
+            req = MyHTTPRequestHandler.Request
+            assert req.act in parms
+            assert req.id in parms
+            assert req.is_correct in parms
+            assert parms[req.act][0] == req.store
+            assert (parms[req.is_correct][0] == req.yes) or (parms[req.is_correct][0] == req.no)
+
+            if parms["act"][0] == "store":
+                question_chooser.inst.store_answer(parms["id"][0], parms["is_correct"][0] == "yes")
+            qa_id, htm, md = question_chooser.inst.get_question()
+
         else:
-            answer = "invalid query: " + query
+            return
+
+        answered, cnt = question_chooser.inst.get_cnt()
+        stats_str = "answered: %d, all: %d, all asked: %.1f" % (answered, cnt, float(answered) / cnt * 100)
+        htm = htm.replace(interviews_parser.STATS_PLACEHOLDER, stats_str)
 
         enc = sys.getfilesystemencoding()
-        encoded = answer.encode(enc, 'surrogateescape')
+        encoded = htm.encode(enc, 'surrogateescape')
         f = io.BytesIO()
         f.write(encoded)
         f.seek(0)
 
         self.send_response(http.HTTPStatus.OK)
-        self.send_header("Content-type", "text/plain; charset=%s" % enc)
+        self.send_header("Content-type", "text/html; charset=%s" % enc)
         self.send_header("Content-Length", str(len(encoded)))
         self.end_headers()
 
