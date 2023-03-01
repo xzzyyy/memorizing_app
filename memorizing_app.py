@@ -10,27 +10,6 @@ import interviews_parser
 
 class MemorizingAppWindow(PyQt6.QtWidgets.QMainWindow):
 
-    class MyWebEngineView(PyQt6.QtWebEngineWidgets.QWebEngineView):
-
-        def __init__(self, win):
-            super().__init__()
-            self.window = win
-            self.menu = None
-
-        def contextMenuEvent(self, evt):
-            act_save_this = PyQt6.QtGui.QAction("Save this", self)
-            act_save_this.triggered.connect(self.window.save_this)
-
-            act_save_all = PyQt6.QtGui.QAction("Save all", self)
-            act_save_all.triggered.connect(self.window.save_all)
-
-            self.menu = self.createStandardContextMenu()
-            self.menu.clear()
-            self.menu.addAction(act_save_this)
-            self.menu.addAction(act_save_all)
-
-            self.menu.popup(evt.globalPos())
-
     def __init__(self):
         super().__init__()
 
@@ -45,6 +24,49 @@ class MemorizingAppWindow(PyQt6.QtWidgets.QMainWindow):
         self.qa_id = ""
         self.md_str = ""
         self.init_logic()
+
+    def save_this(self):
+        fn = self.qa_id + ".md"
+        with open(fn, "w", encoding="utf8") as md:
+            md.write(self.md_str)
+            print("saved:", fn)
+
+    def save_all(self):
+        mds = self.qc.all_mds()
+        with open("all.md", "w", encoding="utf8") as mdf:
+            for one_md in mds:
+                mdf.write(one_md)
+                mdf.write(os.linesep)
+                mdf.write(os.linesep)
+        print("exported %s items" % len(mds))       # TODO status bar
+
+    def correct_clicked(self):
+        self.qc.store_answer(self.qa_id, True)
+        self.update_status()
+        self.next_qa()
+
+    def wrong_clicked(self):
+        self.qc.store_answer(self.qa_id, False)
+        self.update_status()
+        self.next_qa()
+
+    def parse_md_clicked(self):
+        paths_with_filter = PyQt6.QtWidgets.QFileDialog.getOpenFileNames(self, "select .md files to parse",
+                                                                         filter="markdown files (*.md)")
+        if not paths_with_filter[0]:
+            return
+
+        for path in paths_with_filter[0]:
+            print("file: %s, updated: %d" % (os.path.basename(path),
+                                             interviews_parser.update_qa_db(path, self.qc.DB_PATH)))
+
+        self.update_status()
+        self.next_qa()
+
+    def on_close(self):
+        self.qc.release()
+
+    # ---private---
 
     def init_ui(self):
         cw = PyQt6.QtWidgets.QWidget()
@@ -86,6 +108,27 @@ class MemorizingAppWindow(PyQt6.QtWidgets.QMainWindow):
         self.status = PyQt6.QtWidgets.QStatusBar(cw)
         self.setStatusBar(self.status)
 
+    class MyWebEngineView(PyQt6.QtWebEngineWidgets.QWebEngineView):
+
+        def __init__(self, win):
+            super().__init__()
+            self.window = win
+            self.menu = None
+
+        def contextMenuEvent(self, evt):
+            act_save_this = PyQt6.QtGui.QAction("Save this", self)
+            act_save_this.triggered.connect(self.window.save_this)
+
+            act_save_all = PyQt6.QtGui.QAction("Save all", self)
+            act_save_all.triggered.connect(self.window.save_all)
+
+            self.menu = self.createStandardContextMenu()
+            self.menu.clear()
+            self.menu.addAction(act_save_this)
+            self.menu.addAction(act_save_all)
+
+            self.menu.popup(evt.globalPos())
+
     def init_logic(self):
         self.qc = QuestionChooser(QuestionChooser.DB_PATH)
         self.update_status()
@@ -115,50 +158,9 @@ class MemorizingAppWindow(PyQt6.QtWidgets.QMainWindow):
             self.bt_wrong.setEnabled(True)
             self.browser.setEnabled(True)
 
-    def save_this(self):
-        fn = self.qa_id + ".md"
-        with open(fn, "w", encoding="utf8") as md:
-            md.write(self.md_str)
-            print("saved:", fn)
-
-    def save_all(self):
-        mds = self.qc.all_mds()
-        with open("all.md", "w", encoding="utf8") as mdf:
-            for one_md in mds:
-                mdf.write(one_md)
-                mdf.write(os.linesep)
-                mdf.write(os.linesep)
-        print("exported %s items" % len(mds))       # TODO status bar
-
-    def correct_clicked(self):
-        self.qc.store_answer(self.qa_id, True)
-        self.update_status()
-        self.next_qa()
-
-    def wrong_clicked(self):
-        self.qc.store_answer(self.qa_id, False)
-        self.update_status()
-        self.next_qa()
-
-    def parse_md_clicked(self):
-        paths_with_filter = PyQt6.QtWidgets.QFileDialog.getOpenFileNames(self, "select .md files to parse",
-                                                                         filter="markdown files (*.md)")
-        if not paths_with_filter[0]:
-            return
-
-        for path in paths_with_filter[0]:
-            print("file: %s, updated: %d" % (os.path.basename(path),
-                                             interviews_parser.update_qa_db(path, self.qc.DB_PATH)))
-
-        self.update_status()
-        self.next_qa()
-
     def update_status(self):
         answered, cnt = self.qc.get_cnt()
         self.status.showMessage("answered: %d, all: %d, all asked: %.1f" % (answered, cnt, float(answered) / cnt * 100))
-
-    def on_close(self):
-        self.qc.release()
 
 
 app = PyQt6.QtWidgets.QApplication([])
