@@ -104,30 +104,40 @@ def hide_answer(htm_str):
     return lookup_and_insert(htm_str, "</body>\n", "</details>\n", pos, False)[0]
 
 
-STATS_PLACEHOLDER = "StAtS PlAcEhOlDeR"
-BUTTONS_HTM = ('<form action="http://127.0.0.1:8000" style="display: inline">\n' +
+ADDR = "http://127.0.0.1:8000"
+BUTTONS_HTM = ('<form action="%s" style="display: inline">\n' +
                '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
                '    <input type="hidden" name="%s" value="%%s" style="display: inline">\n' +
                '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
                '    <input type="submit" value="CORRECT" style="display: inline">\n' +
                '</form>\n' +
-               '<form action="http://127.0.0.1:8000" style="display: inline">\n' +
+               '<form action="%s" style="display: inline">\n' +
                '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
                '    <input type="hidden" name="%s" value="%%s" style="display: inline">\n' +
                '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
                '    <input type="submit" value="WRONG" style="display: inline">\n' +
                '</form>\n' +
-               '<p><b>stats: </b>%s</p>\n') % (
-    REQ.act, REQ.store, REQ.id, REQ.is_correct, REQ.yes,
-    REQ.act, REQ.store, REQ.id, REQ.is_correct, REQ.no, STATS_PLACEHOLDER
+               '<form action="%s" style="display: inline">\n' +
+               '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
+               '    <input type="submit" value="UPLOAD..." style="display: inline">\n' +
+               '</form>\n' +
+               '<form action="%s" style="display: inline">\n' +
+               '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
+               '    <input type="submit" value="DOWNLOAD" style="display: inline">\n' +
+               '</form>\n' +
+               '<p><b>stats: </b>%%s</p>\n') % (
+    ADDR, REQ.act, REQ.store, REQ.id, REQ.is_correct, REQ.yes,
+    ADDR, REQ.act, REQ.store, REQ.id, REQ.is_correct, REQ.no,
+    ADDR, REQ.act, REQ.upload,
+    ADDR, REQ.act, REQ.dl
 )
 
 
-def add_buttons(htm, qa_id):
+def add_buttons(htm, qa_id, stats):
     anchor = "</details>\n"
     pos = htm.find(anchor) + len(anchor)
 
-    return htm[:pos] + BUTTONS_HTM % (qa_id, qa_id) + htm[pos:]
+    return htm[:pos] + BUTTONS_HTM % (qa_id, qa_id, stats) + htm[pos:]
 
 
 def update_db(md_dir, htm_dir, sqlite):
@@ -159,7 +169,6 @@ def update_db(md_dir, htm_dir, sqlite):
             in_fn = "%s\\%s.htm" % (htm_dir, qa_id)
             with open(in_fn, 'r', encoding="utf8") as htm_f:
                 htm_str = hide_answer(htm_f.read())
-                htm_str = add_buttons(htm_str, qa_id)
                 if not present:
                     sqlite.execute("INSERT INTO %s VALUES (?, ?, ?, 0, 0)" % tbl.name, (qa_id, htm_str, md_str))
                 else:

@@ -127,7 +127,7 @@ class TestQAParser(unittest.TestCase):
             htm_in = htm_f.read()
         with open("test/add_buttons.out.htm", "r") as htm_f:
             htm_out = htm_f.read()
-        self.assertEqual(htm_out, interviews_parser.add_buttons(htm_in, "vec_ops"))
+        self.assertEqual(htm_out, interviews_parser.add_buttons(htm_in, "vec_ops", "STATS_STR"))
 
     def tearDown(self):
         if os.path.isdir(self.prj_dir):

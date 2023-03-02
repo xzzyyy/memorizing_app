@@ -120,6 +120,8 @@ class QuestionChooser:
         tbl = self.get_qa_tbl()
         res = self.conn.execute("SELECT * FROM %s WHERE %s = ?" % (tbl.name, tbl.id_col), [self.last_id])
         row = res.fetchone()
+
+        assert len(row) > 0
         return self.last_id, row[tbl.qa_idx], row[tbl.md_idx]
 
     def get_new_question(self):
