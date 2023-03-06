@@ -3,6 +3,7 @@ import urllib.parse
 import flask
 import werkzeug.utils
 import question_chooser
+import qa_parser
 
 
 ADDR = "http://127.0.0.1:5000"
@@ -63,7 +64,10 @@ def upload_req():
 
     if not file.filename == "" and file.filename.endswith(".md"):
         sec_fn = werkzeug.utils.secure_filename(file.filename)
-        file.save(os.path.join(app.config["UPLOAD_FOLDER"], sec_fn))
+        uploaded_md = os.path.join(app.config["UPLOAD_FOLDER"], sec_fn)
+
+        file.save(uploaded_md)
+        qa_parser.update_qa_db(uploaded_md, question_chooser.inst.DB_PATH)
 
     return flask.redirect(ADDR)
 
