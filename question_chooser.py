@@ -14,7 +14,7 @@ class QuestionChooser:
         return QuestionChooser.StateTbl
 
     def __init__(self, db_path):
-        self.conn = sqlite3.connect(db_path)
+        self.conn = sqlite3.connect(db_path, check_same_thread=False)
 
         res = self.conn.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", [self.QaTbl.name])
         if res.fetchone() is None:

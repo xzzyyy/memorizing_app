@@ -5,7 +5,7 @@ import PyQt6.QtWebEngineCore
 import PyQt6.QtGui
 import PyQt6.QtCore
 from question_chooser import QuestionChooser
-import interviews_parser
+import qa_parser
 
 
 class MemorizingAppWindow(PyQt6.QtWidgets.QMainWindow):
@@ -58,7 +58,7 @@ class MemorizingAppWindow(PyQt6.QtWidgets.QMainWindow):
 
         for path in paths_with_filter[0]:
             print("file: %s, updated: %d" % (os.path.basename(path),
-                                             interviews_parser.update_qa_db(path, self.qc.DB_PATH)))
+                                             qa_parser.update_qa_db(path, self.qc.DB_PATH)))
 
         self.update_status()
         self.next_qa()

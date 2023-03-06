@@ -4,13 +4,10 @@ import shutil
 import subprocess
 import sqlite3
 from question_chooser import QuestionChooser
-from server import MyHTTPRequestHandler
 
 OUTSIDE = 0
 INSIDE = 1
 PRJ_NAME = "MemorizingApp"
-
-REQ = MyHTTPRequestHandler.Request
 
 
 def get_tmp_dirs():
@@ -104,42 +101,6 @@ def hide_answer(htm_str):
     return lookup_and_insert(htm_str, "</body>\n", "</details>\n", pos, False)[0]
 
 
-ADDR = "http://127.0.0.1:8000"
-BUTTONS_HTM = ('<form action="%s" style="display: inline">\n' +
-               '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
-               '    <input type="hidden" name="%s" value="%%s" style="display: inline">\n' +
-               '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
-               '    <input type="submit" value="CORRECT" style="display: inline">\n' +
-               '</form>\n' +
-               '<form action="%s" style="display: inline">\n' +
-               '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
-               '    <input type="hidden" name="%s" value="%%s" style="display: inline">\n' +
-               '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
-               '    <input type="submit" value="WRONG" style="display: inline">\n' +
-               '</form>\n' +
-               '<form action="%s" style="display: inline">\n' +
-               '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
-               '    <input type="submit" value="UPLOAD..." style="display: inline">\n' +
-               '</form>\n' +
-               '<form action="%s" style="display: inline">\n' +
-               '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
-               '    <input type="submit" value="DOWNLOAD" style="display: inline">\n' +
-               '</form>\n' +
-               '<p><b>stats: </b>%%s</p>\n') % (
-    ADDR, REQ.act, REQ.store, REQ.id, REQ.is_correct, REQ.yes,
-    ADDR, REQ.act, REQ.store, REQ.id, REQ.is_correct, REQ.no,
-    ADDR, REQ.act, REQ.upload,
-    ADDR, REQ.act, REQ.dl
-)
-
-
-def add_buttons(htm, qa_id, stats):
-    anchor = "</details>\n"
-    pos = htm.find(anchor) + len(anchor)
-
-    return htm[:pos] + BUTTONS_HTM % (qa_id, qa_id, stats) + htm[pos:]
-
-
 def update_db(md_dir, htm_dir, sqlite):
     tbl = QuestionChooser.get_qa_tbl()
     existing_ids = set()
@@ -188,7 +149,7 @@ def remove_tmps():
     tmp_dir = get_tmp_app_dir()
     try:
         shutil.rmtree(tmp_dir)
-    except OSError:                 # busy by `test_interviews_parser.py` database
+    except OSError:                 # busy by `test_qa_parser.py` database
         pass
 
 
