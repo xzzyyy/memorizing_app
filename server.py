@@ -6,7 +6,8 @@ import question_chooser
 import qa_parser
 
 
-ADDR = "http://127.0.0.1:5000"
+# ADDR = "http://127.0.0.1:5000"
+ADDR = "http://51.250.110.254:5000"
 
 
 class Request:
@@ -67,7 +68,8 @@ def upload_req():
         uploaded_md = os.path.join(app.config["UPLOAD_FOLDER"], sec_fn)
 
         file.save(uploaded_md)
-        qa_parser.update_qa_db(uploaded_md, question_chooser.inst.DB_PATH)
+        with qa_parser.TmpDirs() as (md_dir, htm_dir, tmp_db_path):
+            qa_parser.update_qa_db(uploaded_md, md_dir, htm_dir, question_chooser.inst.DB_PATH)
 
     return flask.redirect(ADDR)
 
@@ -79,31 +81,31 @@ def enrich_htm(qa_id, htm):
     return htm
 
 
-ADDR_STORE = "%s/%s" % (ADDR, Request.store)
-ADDR_DL = "%s/%s" % (ADDR, Request.dl)
-ADDR_UPLOAD = "%s/%s" % (ADDR, Request.upload)
-BUTTONS_HTM = ('<form action="%s" style="display: inline">\n' +
+ADDR_STORE = "%%s/" + Request.store
+ADDR_DL = "%%s/" + Request.dl
+ADDR_UPLOAD = "%%s/" + Request.upload
+BUTTONS_HTM = ('<form action="ADDR/%s" style="display: inline">\n' +
                '    <input type="hidden" name="%s" value="%%s" style="display: inline">\n' +
                '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
                '    <input type="submit" value="CORRECT" style="display: inline">\n' +
                '</form>\n' +
-               '<form action="%s" style="display: inline">\n' +
+               '<form action="ADDR/%s" style="display: inline">\n' +
                '    <input type="hidden" name="%s" value="%%s" style="display: inline">\n' +
                '    <input type="hidden" name="%s" value="%s" style="display: inline">\n' +
                '    <input type="submit" value="WRONG" style="display: inline">\n' +
                '</form>\n' +
-               '<form action="%s" style="display: inline">\n' +
+               '<form action="ADDR/%s" style="display: inline">\n' +
                '    <input type="submit" value="DOWNLOAD" style="display: inline">\n' +
                '</form>\n' +
-               '<form action="%s" method=post enctype=multipart/form-data style="display: inline">\n' +
+               '<form action="ADDR/%s" method=post enctype=multipart/form-data style="display: inline">\n' +
                '    <input type=file name="%s" style="display: inline">\n' +
                '    <input type="submit" value="UPLOAD..." style="display: inline">\n' +
                '</form>\n' +
                '<p><b>stats: </b>%%s</p>\n') % (
-    ADDR_STORE, Request.id, Request.is_correct, Request.yes,
-    ADDR_STORE, Request.id, Request.is_correct, Request.no,
-    ADDR_DL,
-    ADDR_UPLOAD, Request.upload_fn
+    Request.store, Request.id, Request.is_correct, Request.yes,
+    Request.store, Request.id, Request.is_correct, Request.no,
+    Request.dl,
+    Request.upload, Request.upload_fn
 )
 
 
@@ -111,4 +113,4 @@ def add_buttons(htm, qa_id, stats):
     anchor = "</details>\n"
     pos = htm.find(anchor) + len(anchor)
 
-    return htm[:pos] + BUTTONS_HTM % (qa_id, qa_id, stats) + htm[pos:]
+    return htm[:pos] + (BUTTONS_HTM % (qa_id, qa_id, stats)).replace("ADDR", ADDR) + htm[pos:]

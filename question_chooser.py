@@ -66,6 +66,9 @@ class QuestionChooser:
 
         return [r[md_idx] for r in rows]
 
+    def get_conn(self):
+        return self.conn
+
     def release(self):
         self.conn.close()
 

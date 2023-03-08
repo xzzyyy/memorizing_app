@@ -56,9 +56,10 @@ class MemorizingAppWindow(PyQt6.QtWidgets.QMainWindow):
         if not paths_with_filter[0]:
             return
 
-        for path in paths_with_filter[0]:
-            print("file: %s, updated: %d" % (os.path.basename(path),
-                                             qa_parser.update_qa_db(path, self.qc.DB_PATH)))
+        with qa_parser.TmpDirs() as (md_dir, htm_dir, tmp_db_fn):
+            for path in paths_with_filter[0]:
+                print("file: %s, updated: %d" % (os.path.basename(path),
+                                                 qa_parser.update_qa_db(path, md_dir, htm_dir, self.qc.DB_PATH)))
 
         self.update_status()
         self.next_qa()

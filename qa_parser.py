@@ -1,8 +1,7 @@
 import os
 import re
-import shutil
 import subprocess
-import sqlite3
+import tempfile
 from question_chooser import QuestionChooser
 
 OUTSIDE = 0
@@ -10,14 +9,18 @@ INSIDE = 1
 PRJ_NAME = "MemorizingApp"
 
 
-def get_tmp_dirs():
-    tmp_dir = os.environ["TMP"]
-    return "%s\\%s\\md_files" % (tmp_dir, PRJ_NAME), "%s\\%s\\htm_files" % (tmp_dir, PRJ_NAME)
+class TmpDirs:
 
+    def __enter__(self):
+        self.md_dir = tempfile.TemporaryDirectory()
+        self.htm_dir = tempfile.TemporaryDirectory()
+        self.db_dir = tempfile.TemporaryDirectory()
+        return self.md_dir.name, self.htm_dir.name, self.db_dir.name + "/temp.sqlite"
 
-def get_tmp_app_dir():
-    tmp_dir = os.environ["TMP"]
-    return "%s\\%s" % (tmp_dir, PRJ_NAME)
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.db_dir.cleanup()
+        self.htm_dir.cleanup()
+        self.md_dir.cleanup()
 
 
 # input `.md` should not have symbols other than alphanumeric and underscore in `id`
@@ -54,16 +57,7 @@ def parse_md(md_path):
     return qa_strs
 
 
-def write_mds(qa_strs):
-    try:
-        md_dir, htm_dir = get_tmp_dirs()
-
-        os.makedirs(md_dir)
-        os.makedirs(htm_dir)
-
-    except OSError:
-        raise OSError("can't create subfolders in TMP (envvar) dir")
-
+def write_mds(qa_strs, md_dir):
     for qa_id in qa_strs:
         md_file_fn = "%s/%s.md" % (md_dir, qa_id)
         try:
@@ -145,26 +139,11 @@ def update_db(md_dir, htm_dir, sqlite):
     return updated_cnt
 
 
-def remove_tmps():
-    tmp_dir = get_tmp_app_dir()
-    try:
-        shutil.rmtree(tmp_dir)
-    except OSError:                 # busy by `test_qa_parser.py` database
-        pass
-
-
-def update_qa_db(md_path, db_path):
-
-    md_dir, htm_dir = get_tmp_dirs()
-    sqlite = sqlite3.connect(db_path)
-
-    try:
-        qa_strs = parse_md(md_path)
-        write_mds(qa_strs)
-        convert_to_htm(md_dir, htm_dir)
-        updated_cnt = update_db(md_dir, htm_dir, sqlite)
-    finally:
-        sqlite.close()
-        remove_tmps()
+def update_qa_db(md_path, md_dir, htm_dir, sqlite):
+    # as "interface" function creates temporary files itself
+    qa_strs = parse_md(md_path)
+    write_mds(qa_strs, md_dir)
+    convert_to_htm(md_dir, htm_dir)
+    updated_cnt = update_db(md_dir, htm_dir, sqlite)
 
     return updated_cnt

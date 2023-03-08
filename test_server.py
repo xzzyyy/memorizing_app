@@ -8,7 +8,7 @@ class MyTestCase(unittest.TestCase):
             htm_in = htm_f.read()
         with open("test/add_buttons.out.htm", "r") as htm_f:
             htm_out = htm_f.read()
-        self.assertEqual(htm_out, server.add_buttons(htm_in, "vec_ops", "STATS_STR"))
+        self.assertEqual(htm_out.replace("ADDR", server.ADDR), server.add_buttons(htm_in, "vec_ops", "STATS_STR"))
 
 
 if __name__ == '__main__':
