@@ -71,8 +71,8 @@ def convert_to_htm(md_dir, htm_dir):
     script_path = os.path.dirname(os.path.realpath(__file__))
     for md_fn in os.listdir(md_dir):
         qa_id = os.path.splitext(md_fn)[0]
-        subprocess.run(["pandoc", "-s", "-H", "%s\\style.css" % script_path, "%s\\%s" % (md_dir, md_fn),
-                        "-o", "%s\\%s" % (htm_dir, "%s.htm" % qa_id)])
+        subprocess.run(["pandoc", "-s", "-H", "%s/style.css" % script_path, "%s/%s" % (md_dir, md_fn),
+                        "-o", "%s/%s" % (htm_dir, "%s.htm" % qa_id)])
 
 
 def lookup_and_insert(s, lookup, ins, pos, after):
@@ -116,12 +116,12 @@ def update_db(md_dir, htm_dir, sqlite):
         if not cursor.fetchone():
             present = False
 
-        in_fn = "%s\\%s.md" % (md_dir, qa_id)
+        in_fn = "%s/%s.md" % (md_dir, qa_id)
         try:
             with open(in_fn, 'r', encoding="utf8") as md_f:
                 md_str = md_f.read()
 
-            in_fn = "%s\\%s.htm" % (htm_dir, qa_id)
+            in_fn = "%s/%s.htm" % (htm_dir, qa_id)
             with open(in_fn, 'r', encoding="utf8") as htm_f:
                 htm_str = hide_answer(htm_f.read())
                 if not present:

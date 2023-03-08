@@ -69,7 +69,7 @@ def upload_req():
 
         file.save(uploaded_md)
         with qa_parser.TmpDirs() as (md_dir, htm_dir, tmp_db_path):
-            qa_parser.update_qa_db(uploaded_md, md_dir, htm_dir, question_chooser.inst.DB_PATH)
+            qa_parser.update_qa_db(uploaded_md, md_dir, htm_dir, question_chooser.inst.get_conn())
 
     return flask.redirect(ADDR)
 
