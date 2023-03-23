@@ -56,7 +56,7 @@ def dl_req():
     with open(md_fn, "w") as md_file:
         md_file.write(md)
 
-    return flask.send_file(md_fn, as_attachment=True)
+    return flask.send_file(os.getcwd() + "/" + md_fn, as_attachment=True)
 
 
 @app.route("/" + Request.upload, methods=["POST"])
